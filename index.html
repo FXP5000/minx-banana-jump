@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Minx's Banana Jump — an 8-bit jungle game</title>
+<title>Banana Runner — an 8-bit jungle game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
@@ -91,16 +91,16 @@
 </head>
 <body>
   <div class="vine"></div>
-  <h1>MINX'S BANANA JUMP</h1>
+  <h1>BANANA RUNNER</h1>
   <div class="vine"></div>
   <div class="sub">An 8-bit jungle game — jump and collect!</div>
 
   <div id="wrap">
     <canvas id="game" width="800" height="450"></canvas>
     <div id="overlay">
-      <h2 id="ov-title">MINX'S BANANA JUMP</h2>
-      <p id="ov-text">Help Minx the monkey collect bananas!<br>
-      <b>You control Minx:</b> move him with <b>◀ ▶</b> (or A / D) and jump with <b>SPACE</b>.<br>
+      <h2 id="ov-title">BANANA RUNNER</h2>
+      <p id="ov-text">Help the monkey collect bananas!<br>
+      <b>You control the monkey:</b> move him with <b>◀ ▶</b> (or A / D) and jump with <b>SPACE</b>.<br>
       The screen follows him forwards — but it never scrolls back, so there's no going back to the start!<br>
       Level 1 is just jumping. Level 2 adds swinging vines. Level 3 is the Tunnel Tree.<br>
       Every <b>5 bananas = 1 extra life</b>. Count along: 1, 2, 3, 4, 5!<br>
@@ -113,7 +113,7 @@
        everything laid out in neat rows of same-size tiles. -->
   <div id="menu-page">
     <div class="vine"></div>
-    <h1>MINX'S MAIN MENU</h1>
+    <h1>BANANA RUNNER</h1>
     <div class="vine"></div>
     <p class="menu-sub">Pick your monkey and a hat! Everything is in rows — scroll the page to see them all.<br>
     Collect bananas in the game to fill your <b>Banana Bank</b>.<br>
@@ -145,24 +145,24 @@
 <script>
 "use strict";
 /* ============================================================
-   MINX'S BANANA JUMP
+   BANANA RUNNER
    A simple, kid-friendly 8-bit platformer.
    Design rules (kept deliberately gentle for young players):
-   - Minx AUTO-RUNS forward at one steady speed.
+   - The monkey AUTO-RUNS forward at one steady speed.
      There is exactly ONE action: SPACE / click / tap to jump (and to let
      go of a vine). No steering keys at all.
-   - Minx has a running animation (pumping legs and arms, little bob) and
+   - He has a running animation (pumping legs and arms, little bob) and
      a different jumping animation (arms up, legs tucked).
    - Vines swing OUT FAR on a wide, slow arc all the time — the rope end
-     sweeps toward Minx as he approaches, and grabbing is based on reaching
+     sweeps toward him as he approaches, and grabbing is based on reaching
      the rope END (a big, forgiving target), so vines are easy to catch.
    - One new idea per level: Level 1 = jumping only. Level 2 = vines.
-   - Minx jumps gently (about 100px high) — enough for one platform step, no more.
+   - He jumps gently (about 100px high) — enough for one platform step, no more.
    - No running underneath to the finish: after the start, Level 1 is water
      with platforms over it, so the platforms ARE the path. Level 2's water
      gaps can only be crossed on the vines, which swing slowly and gently.
    - No enemies. The only danger is splashing into the water: that costs a
-     life and restarts Minx at the START of the level he is in. Losing all
+     life and restarts him at the START of the level he is in. Losing all
      lives also restarts him at the start of that same level (never Level 1
      if he was further on).
    - 3 lives, shown in a clean golden-yellow bar split into 3 sections.
@@ -251,7 +251,7 @@ const WATER_Y = 412;              // splash line: feet below this = in the water
 const LEVELS = [
   {
     name: 'LEVEL 1 — JUMPING PRACTICE',
-    intro: 'Jumping practice! Move Minx with ◀ ▶ — jump with SPACE from platform to platform over the water!',
+    intro: 'Jumping practice! Move with ◀ ▶ — jump with SPACE from platform to platform over the water!',
     world: 3080,
     grounds: [[0, 420]],                        // solid ground ONLY at the start…
     platforms: [                                // …after that, platforms over the creek are the only way across.
@@ -451,7 +451,7 @@ function loseLife() {
   if (lives <= 0) {
     state = 'gameOver';
     showOverlay('GAME OVER',
-      `Minx is out of lives — but every great monkey tries again!<br>He restarts at the start of <b>${level.name}</b> with 3 fresh lives.`,
+      `Out of lives — but every great monkey tries again!<br>He restarts at the start of <b>${level.name}</b> with 3 fresh lives.`,
       '↻ TRY THIS LEVEL AGAIN',
       () => { lives = 3; restartCurrentLevel(); });
   } else {
@@ -493,12 +493,12 @@ function completeLevel() {
       'Next: the Tunnel Tree! Jump the gaps in the tunnel floor — but DON\'T jump under the hanging roots, or BONK!',
     ];
     showOverlay(level.name + ' done!',
-      `Great jumping, Minx!<br>Bananas so far: <b>${totalBananas}</b> &nbsp;•&nbsp; Score: <b>${score}</b><br>${nextTips[levelIndex] || ''}`,
+      `Great jumping!<br>Bananas so far: <b>${totalBananas}</b> &nbsp;•&nbsp; Score: <b>${score}</b><br>${nextTips[levelIndex] || ''}`,
       '▶ LEVEL ' + (levelIndex + 2), () => { levelStart = { bananas: totalBananas, score: score }; startLevel(levelIndex + 1, true); });
   } else {
     state = 'win';
     showOverlay('YOU WIN!',
-      `Minx made it through the whole jungle!<br>You collected <b>${totalBananas} bananas</b> and scored <b>${score}</b>.<br>🆕 <b>Unlocked: the Endless Level!</b> No finish line — run as far as you can and chase the high score!`,
+      `You made it through the whole jungle!<br>You collected <b>${totalBananas} bananas</b> and scored <b>${score}</b>.<br>🆕 <b>Unlocked: the Endless Level!</b> No finish line — run as far as you can and chase the high score!`,
       'PLAY THE ENDLESS LEVEL', () => startEndless());
   }
 }
@@ -610,7 +610,7 @@ ovBtn.onclick = openMenu;
    Finbar's design: a main menu before the game starts. Common monkeys are the
    rainbow colours; RARE monkeys (Golden, Void) cost lots of bananas. Hats and
    accessories are bought the same way and worn in the game. Every banana
-   Minx collects goes into a persistent Banana Bank (localStorage). */
+   the monkey collects goes into a persistent Banana Bank (localStorage). */
 const CHARACTERS = [
   { name: 'Classic', fur: '#795548', dark: '#5d4037', price: 0 },
   { name: 'Red',     fur: '#e53935', dark: '#b71c1c', price: 10 },
