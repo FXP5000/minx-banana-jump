@@ -924,8 +924,8 @@ function update() {
 
   for (const b of bananasLeft) {
     if (!b.taken &&
-        player.x < b.x + 22 && player.x + player.w > b.x &&
-        player.y < b.y + 24 && player.y + player.h > b.y) collectBanana(b);
+        player.x < b.x + 34 && player.x + player.w > b.x &&
+        player.y < b.y + 20 && player.y + player.h > b.y) collectBanana(b);
   }
 
   // The finish only counts when Minx is standing AT the golden tree (on its platform
@@ -1338,13 +1338,17 @@ function drawWorld() {
       [cx - 40, base - 182], [cx + 36, base - 184], [cx - 4, base - 206], [cx - 150, base - 104], [cx + 152, base - 106]];
     for (const hb of hang) { px(hb[0] + 11, hb[1] - 6, 3, 7, '#6d4c2f'); drawBanana(hb[0], hb[1]); }
     drawBanana(cx - 58, base - 232); drawBanana(cx + 58, base - 234);   // a couple nestled in the crown
-    // golden sparkles (Finbar): glued to the crown, ONE fixed size, and
-    // they only FADE — a smooth alpha swell, no popping in/out, no size
-    // jumps (the size flipping was the jitter he saw while moving).
-    const SPARKS = [[-96, -214], [-30, -238], [44, -226], [104, -196], [-58, -186], [12, -262], [78, -248]];
+    // golden sparkles (Finbar): they FALL slowly down the crown like
+    // drifting glitter, fading in at the top and out at the bottom. They
+    // run on the game's own step clock (stepFrames), never the wall
+    // clock — so they move exactly WITH the world and cannot shake
+    // against it when Minx moves.
+    const SPARKS = [[-96, -252], [-30, -268], [44, -256], [104, -232], [-58, -224], [12, -282], [78, -272]];
     for (let si = 0; si < SPARKS.length; si++) {
-      ctx.globalAlpha = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(Date.now() / 1500 + si * 1.7));
-      const sx = cx + SPARKS[si][0], sy = base + SPARKS[si][1];
+      const cyc = (stepFrames * 0.3 + si * 23) % 54;                    // slow fall, ~3 seconds per drift
+      ctx.globalAlpha = 0.15 + 0.85 * Math.sin(Math.PI * cyc / 54);     // fade in, then out
+      const sx = cx + SPARKS[si][0] + Math.round(Math.sin(stepFrames / 34 + si * 2.1) * 2);
+      const sy = base + SPARKS[si][1] + cyc;
       px(sx - 3, sy - 1, 8, 2, '#fff9c4'); px(sx - 1, sy - 3, 2, 8, '#fff9c4');
     }
     ctx.globalAlpha = 1;
@@ -1352,25 +1356,28 @@ function drawWorld() {
 }
 
 function drawBanana(x, y) {
-  // A REGULAR BANANA (Finbar): a plump, shallow curve — thick body, a
-  // wide rounded bottom (NOT a V), one end rising to the stem, the other
-  // tapering to a point with a tiny dark tip. One flat golden colour,
-  // drawn row by row like a pixel sprite.
+  // A REGULAR BANANA (Finbar) — designed on a grid and eyeballed before
+  // shipping: a long slim body with a gentle bend, the stem end at the
+  // top-left, the tip rising at the right. One flat golden colour, drawn
+  // row by row (1px steps, 2px-tall rows overlap for a smooth edge).
   const ROWS = [
-    [[3, 6]],
-    [[2, 8]],
-    [[2, 10], [24, 27]],
-    [[3, 13], [22, 27]],
-    [[4, 16], [20, 26]],
-    [[6, 24]],
-    [[7, 23]],
-    [[9, 21]],
-    [[11, 19]]
+    [[3, 4]],
+    [[3, 5]],
+    [[2, 7], [31, 35]],
+    [[3, 9], [29, 35]],
+    [[3, 11], [26, 35]],
+    [[4, 16], [21, 34]],
+    [[5, 34]],
+    [[6, 33]],
+    [[7, 31]],
+    [[8, 30]],
+    [[10, 29]],
+    [[13, 27]],
+    [[15, 23]]
   ];
   for (let r = 0; r < ROWS.length; r++)
-    for (const run of ROWS[r]) px(x + run[0], y + r * 2, run[1] - run[0], 2, '#ffd83d');
-  px(x + 25, y + 4, 2, 2, '#6d4c2f');   // the dark tip at the pointed end
-  px(x + 3, y - 2, 4, 3, '#6d4c2f');    // the stem, on top of the other end
+    for (const run of ROWS[r]) px(x + run[0], y + r, run[1] - run[0], 1, '#ffd83d');
+  px(x + 3, y, 2, 3, '#6d4c2f');   // the stem cap on the top-left end
 }
 function drawMonkey() {
   const x = player.x - cameraX;
@@ -1513,6 +1520,7 @@ function draw() {
 // literally moved faster on them. Now his speed is the true original
 // speed everywhere.)
 let lastTime = 0, timeAcc = 0;
+let stepFrames = 0;   // physics steps taken — game-time clock for world effects (sparkles) so they move WITH the world, never against it
 let prevPX = 0, prevPY = 0, prevCam = 0;   // for smooth interpolated drawing
 function loop(ts) {
   requestAnimationFrame(loop);
@@ -1523,7 +1531,7 @@ function loop(ts) {
   timeAcc += dt;
   while (timeAcc >= 1 / 60) {
     prevPX = player.x; prevPY = player.y; prevCam = cameraX;
-    update();
+    update(); stepFrames++;
     timeAcc -= 1 / 60;
   }
   // SMOOTH ANIMATION (Finbar): physics still steps at exactly 60/sec, but
