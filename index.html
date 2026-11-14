@@ -950,20 +950,23 @@ function px(x, y, w, h, color) {
 // BARK TEXTURE (Finbar): wavy vertical grooves, light ridges and flecks —
 // drawn over tree trunks so the bark looks like real bark, in pixels.
 function barkTexture(x, y, w, h, seed) {
-  for (let gx = x + 5 + (seed % 5); gx < x + w - 3; gx += 11) {           // dark grooves, wobbling as they climb
-    for (let gy = y + 2; gy < y + h - 6; gy += 10) {
-      // the wobble MUST come from LOCAL coordinates (gx - x, gy - y):
-      // using screen x made every groove jump sideways as the camera
-      // moved — the wood looked like it was shaking (same bug the creek had).
-      const off = (((gx - x) * 7 + (gy - y) * 13 + seed) % 3) - 1;
-      px(gx + off, gy, 3, 9, '#4e342e');
+  // FULL bark coverage (Finbar): the trunk is covered in lots of little
+  // lines — dark groove dashes in tight staggered columns (they fit even
+  // on the narrowest background trunks), light dashes sprinkled between,
+  // and flecks. No single long line anywhere. All offsets are LOCAL
+  // (gx - x, gy - y) so the pattern never crawls when the camera moves.
+  for (let gx = x + 2 + (seed % 3); gx < x + w - 1; gx += 7) {
+    const stagger = ((gx - x) * 3 + seed) % 5;
+    for (let gy = y + 2 + stagger; gy < y + h - 5; gy += 11) {
+      const wob = (((gx - x) * 7 + (gy - y) * 13 + seed) % 3) - 1;
+      px(gx + wob, gy, 2, 7, '#4e342e');
     }
   }
-  for (let gx = x + 10 + (seed % 5); gx < x + w - 3; gx += 22) {          // light ridges — as lots of LITTLE broken dashes, never one long line
-    for (let gy = y + 4; gy < y + h - 8; gy += 12) px(gx + (((gy - y) * 7 + seed) % 3) - 1, gy, 2, 7, '#8d6e63');
+  for (let gx = x + 5 + (seed % 4); gx < x + w - 1; gx += 11) {
+    for (let gy = y + 5 + ((gx - x + seed) % 6); gy < y + h - 4; gy += 13) px(gx, gy, 2, 5, '#8d6e63');
   }
-  const flecks = Math.floor(w * h / 900);
-  for (let f = 0; f < flecks; f++) {                                       // little bark flecks
+  const flecks = Math.floor(w * h / 260);
+  for (let f = 0; f < flecks; f++) {
     px(x + ((seed * 31 + f * 47) % Math.max(4, w - 6)), y + ((seed * 17 + f * 29) % Math.max(4, h - 6)), 3, 2, '#795548');
   }
 }
@@ -1017,16 +1020,22 @@ function drawBackground() {
     } else if (hsh < 0.30) {    // a leafy bush with berries
       blob(gx + 24, farFloor - 14, 26, '#1d4020'); blob(gx + 6, farFloor - 8, 17, '#24512a'); blob(gx + 42, farFloor - 8, 17, '#1d4020');
       px(gx + 14, farFloor - 20, 4, 4, '#e53935'); px(gx + 30, farFloor - 12, 4, 4, '#e53935'); px(gx + 22, farFloor - 26, 4, 4, '#ff80ab');
-    } else if (hsh < 0.44) {    // a TOUCAN on a branch
-      px(gx + 2, farFloor - 34, 46, 5, '#5d4037');
-      px(gx + 8, farFloor - 29, 10, 5, '#2e7d32'); px(gx + 34, farFloor - 29, 9, 5, '#388e3c');
-      px(gx + 18, farFloor - 48, 15, 20, '#263238');
-      px(gx + 20, farFloor - 44, 10, 10, '#eceff1');
-      px(gx + 31, farFloor - 47 + twitch, 17, 6, '#ffb300');
-      px(gx + 42, farFloor - 47 + twitch, 6, 6, '#e53935');
-      px(gx + 27, farFloor - 45 + twitch, 3, 3, '#4fc3f7');
-      px(gx + 12, farFloor - 38, 7, 12, '#37474f');
-      px(gx + 21, farFloor - 29, 3, 5, '#ffb300'); px(gx + 27, farFloor - 29, 3, 5, '#ffb300');
+    } else if (hsh < 0.44) {    // a TOUCAN on a branch — redesigned: round head held high, long stepped beak, straight back
+      px(gx + 2, farFloor - 30, 48, 5, '#5d4037');                          // branch
+      px(gx + 6, farFloor - 25, 10, 5, '#2e7d32'); px(gx + 38, farFloor - 25, 9, 5, '#388e3c');   // leaves
+      px(gx + 13, farFloor - 40, 6, 13, '#37474f');                         // long tail feathers, hanging straight down
+      px(gx + 20, farFloor - 40, 5, 11, '#263238');
+      blob(gx + 24, farFloor - 40, 13, '#263238');                          // round body, upright
+      px(gx + 20, farFloor - 44, 9, 12, '#1e88e5');                         // blue-green wing patch
+      blob(gx + 32, farFloor - 54 + twitch, 9, '#263238');                  // the HEAD: a proper round head, held high above the body
+      blob(gx + 30, farFloor - 49 + twitch, 7, '#eceff1');                  // white throat under the head
+      px(gx + 38, farFloor - 57 + twitch, 13, 5, '#ffb300');                 // beak part 1: long golden top...
+      px(gx + 48, farFloor - 55 + twitch, 9, 4, '#ff9800');                  // beak part 2: stepping down...
+      px(gx + 54, farFloor - 53 + twitch, 5, 4, '#e53935');                  // ...to a red tip
+      px(gx + 37, farFloor - 54 + twitch, 11, 2, '#f57f17');                 // beak underside line
+      blob(gx + 31, farFloor - 56 + twitch, 3, '#4fc3f7');                  // bright blue eye ring
+      px(gx + 30, farFloor - 57 + twitch, 2, 2, '#263238');                  // pupil
+      px(gx + 21, farFloor - 28, 3, 4, '#ffb300'); px(gx + 27, farFloor - 28, 3, 4, '#ffb300');   // feet gripping the branch
     } else if (hsh < 0.56) {    // a scarlet MACAW on a branch
       px(gx + 2, farFloor - 32, 46, 5, '#5d4037');
       px(gx + 30, farFloor - 27, 10, 5, '#2e7d32');
@@ -1244,7 +1253,6 @@ function drawWorld() {
     // trunk above the tunnel (roof underside at y=232)
     px(tx0, 140, tw, 92, '#6d4c2f');
     px(tx0, 140, tw, 10, '#795548');
-    for (let bx = tx0 + 22; bx < tx1 - 10; bx += 52) px(bx, 150, 6, 76, '#5d4037');   // bark stripes
     barkTexture(tx0 + 6, 148, tw - 12, 80, (tr[0] % 89) + 5);                        // full bark texture over the trunk
     const kx = tx0 + 190 + (tr[0] % 260);                   // a knot in the wood
     blob(kx, 188, 11, '#4e342e');
