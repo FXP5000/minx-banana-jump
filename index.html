@@ -966,6 +966,15 @@ function drawBackground() {
       blob(cx, 6 + r * 52 + ((i * 13 + r * 7) % 18), 46 + ((i * 29 + r * 11) % 22), greens[(i + r) % greens.length]);
     }
   }
+  // A LAND STRIP for the background world (Finbar): once the floating
+  // bushes over the creek were removed, the background trees had nothing
+  // to stand on and looked like they were levitating. This far bank runs
+  // the whole width BEHIND the play world — the foreground ground covers
+  // it where land exists, and across the creek it reads as the far bank,
+  // so every background tree, bush and animal stands on land.
+  px(0, GROUND_Y - 38, W, H - GROUND_Y + 38, '#4e342e');
+  px(0, GROUND_Y - 38, W, 12, '#2e7d32');
+  px(0, GROUND_Y - 26, W, 5, '#1b5e20');
   // dappled light spots filtering through the leaves (not sky — just glow)
   for (let i = 0; i < 10; i++) {
     const dx = ((i * 173 - cameraX * 0.3) % (W + 120) + W + 120) % (W + 120) - 60;
@@ -1289,35 +1298,45 @@ function drawWorld() {
     const bobY = Math.sin(Date.now() / 300 + b.bob) * 3;
     drawBanana(sx, b.y + bobY);
   }
-  // goal: THE GOLDEN TREE (Finbar) — a GIANT tree, far bigger than the
-  // others, branches reaching out everywhere, and golden bananas growing
-  // all over it. Rooted at the level's goal height.
+  // goal: THE GOLDEN TREE (Finbar) — a GIANT tree, shaped like a real
+  // tree: a tapered trunk, big forked branches you can SEE rising into a
+  // wide irregular crown of golden leaves, and golden bananas hanging
+  // from the branches all over it. Rooted at the goal height.
   const gx = level.goalX - cameraX, gy = level.goalY;
-  if (gx > -360 && gx < W + 360) {
+  if (gx > -380 && gx < W + 380) {
     const cx = gx + 16, base = gy;
     // roots gripping the platform
-    px(cx - 46, base - 9, 40, 9, '#5d4037'); px(cx + 8, base - 9, 40, 9, '#5d4037');
-    px(cx - 34, base - 17, 26, 9, '#5d4037'); px(cx + 10, base - 17, 26, 9, '#5d4037');
-    // the giant trunk — plain brown, thick as three normal trees
-    px(cx - 20, base - 156, 42, 156, '#6d4c2f');
-    px(cx - 24, base - 44, 50, 12, '#6d4c2f');
-    // branches reaching out everywhere (stepped pixel diagonals)
-    for (let s = 0; s < 6; s++) px(cx - 16 - s * 13, base - 128 - s * 10, 17, 9, '#6d4c2f');   // up-left
-    for (let s = 0; s < 6; s++) px(cx + 12 + s * 13, base - 132 - s * 10, 17, 9, '#6d4c2f');   // up-right
-    for (let s = 0; s < 4; s++) px(cx - 16 - s * 14, base - 92 - s * 5, 16, 8, '#6d4c2f');     // mid-left
-    for (let s = 0; s < 4; s++) px(cx + 12 + s * 14, base - 96 - s * 5, 16, 8, '#6d4c2f');     // mid-right
-    for (let s = 0; s < 4; s++) px(cx - 3 + s * 2, base - 152 - s * 12, 13, 9, '#6d4c2f');      // straight up
-    // the huge golden canopy
-    blob(cx, base - 216, 80, '#ffb300');
-    blob(cx - 76, base - 184, 54, '#ffca28'); blob(cx + 80, base - 186, 56, '#ffb300');
-    blob(cx - 34, base - 248, 50, '#ffd83d'); blob(cx + 42, base - 246, 48, '#ffca28');
-    blob(cx - 104, base - 148, 38, '#ffb300'); blob(cx + 112, base - 150, 40, '#ffd83d');
-    blob(cx - 52, base - 222, 26, '#ffe082'); blob(cx + 58, base - 216, 24, '#ffe082');        // sunlit patches
-    // golden bananas growing ALL over it
-    drawBanana(cx - 108, base - 168); drawBanana(cx + 96, base - 172); drawBanana(cx - 62, base - 238);
-    drawBanana(cx + 44, base - 240); drawBanana(cx - 14, base - 262); drawBanana(cx - 88, base - 128);
-    drawBanana(cx + 118, base - 132); drawBanana(cx - 34, base - 196); drawBanana(cx + 66, base - 200);
-    drawBanana(cx + 2, base - 148);
+    px(cx - 48, base - 9, 42, 9, '#5d4037'); px(cx + 8, base - 9, 42, 9, '#5d4037');
+    px(cx - 36, base - 17, 28, 9, '#5d4037'); px(cx + 10, base - 17, 28, 9, '#5d4037');
+    // tapered trunk: wide at the base, narrower as it climbs (plain brown)
+    px(cx - 24, base - 52, 50, 52, '#6d4c2f');
+    px(cx - 19, base - 108, 40, 56, '#6d4c2f');
+    px(cx - 14, base - 148, 30, 40, '#6d4c2f');
+    // big forked branches, visible as they rise into the crown
+    for (let s = 0; s < 7; s++) px(cx - 12 - s * 12, base - 138 - s * 11, 18, 10, '#6d4c2f');  // up-left fork
+    for (let s = 0; s < 7; s++) px(cx + 8 + s * 12, base - 140 - s * 11, 18, 10, '#6d4c2f');    // up-right fork
+    for (let s = 0; s < 5; s++) px(cx - 12 - s * 13, base - 96 - s * 4, 17, 9, '#6d4c2f');      // left limb
+    for (let s = 0; s < 5; s++) px(cx + 8 + s * 13, base - 98 - s * 4, 17, 9, '#6d4c2f');       // right limb
+    for (let s = 0; s < 5; s++) px(cx - 4, base - 146 - s * 13, 14, 10, '#6d4c2f');             // straight up
+    // the crown: a WIDE, irregular cluster of golden leaf blobs (not one round cloud)
+    const crown = [[cx, base - 226, 62, '#ffb300'], [cx - 66, base - 204, 48, '#ffca28'], [cx + 68, base - 206, 50, '#ffb300'],
+      [cx - 118, base - 172, 38, '#ffca28'], [cx + 122, base - 174, 40, '#ffd83d'], [cx - 36, base - 246, 44, '#ffd83d'],
+      [cx + 40, base - 244, 42, '#ffca28'], [cx, base - 262, 38, '#ffb300'], [cx - 96, base - 220, 34, '#ffb300'],
+      [cx + 100, base - 222, 34, '#ffd83d'], [cx - 140, base - 140, 28, '#ffca28'], [cx + 146, base - 142, 28, '#ffb300']];
+    for (const c of crown) blob(c[0], c[1], c[2], c[3]);
+    // leaf detail on the crown: light and shadow clusters, glued to the tree
+    for (let i = 0; i < 26; i++) {
+      const hx = cx + ((cx * 7 + i * 61) % 280) - 140, hy = base - 268 + ((cx * 3 + i * 41) % 130);
+      const ex2 = (hx - cx) / 165, ey2 = (hy - (base - 208)) / 78;
+      if (ex2 * ex2 + ey2 * ey2 > 1) continue;
+      px(hx, hy, 7, 5, i % 3 ? '#f9a825' : '#fff59d');
+      if (i % 4 === 0) px(hx + 2, hy + 6, 5, 4, '#e0a800');
+    }
+    // golden bananas HANGING from the branches, all over the tree
+    const hang = [[cx - 128, base - 128], [cx + 128, base - 130], [cx - 84, base - 158], [cx + 88, base - 160],
+      [cx - 40, base - 182], [cx + 36, base - 184], [cx - 4, base - 206], [cx - 150, base - 104], [cx + 152, base - 106]];
+    for (const hb of hang) { px(hb[0] + 11, hb[1] - 6, 3, 7, '#6d4c2f'); drawBanana(hb[0], hb[1]); }
+    drawBanana(cx - 58, base - 232); drawBanana(cx + 58, base - 234);   // a couple nestled in the crown
     // golden sparkles drifting on the tree
     const tw = Math.floor(Date.now() / 400) % 3;
     px(cx - 90 + tw * 60, base - 206, 4, 4, '#fff9c4'); px(cx + 84 - tw * 44, base - 232, 4, 4, '#fff9c4'); px(cx + 20 + tw * 30, base - 168, 4, 4, '#fff9c4');
