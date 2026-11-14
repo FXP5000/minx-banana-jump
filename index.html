@@ -605,12 +605,29 @@ function drawWorld() {
 }
 
 function drawBanana(x, y) {
-  // chunky pixel banana
-  px(x + 8, y, 4, 6, '#6d4c2f');
-  px(x + 4, y + 5, 14, 5, '#ffd83d');
-  px(x + 2, y + 9, 18, 5, '#ffd83d');
-  px(x + 4, y + 13, 14, 5, '#f9a825');
-  px(x + 8, y + 17, 7, 5, '#f9a825');
+  // A proper banana: a long shallow crescent with pointed tips, a stem,
+  // and the ridge line every real banana has — not a round blob.
+  // (Finbar said the old round one looked like a golden apple.)
+  const Y = '#ffd83d', L = '#fff176', S = '#f9a825', R = '#e0a800';
+  px(x + 2, y, 3, 5, '#6d4c2f');          // stem at the top-left
+  px(x + 4, y + 3, 3, 3, '#8d6e63');
+  px(x + 0, y + 5, 6, 5, Y);              // left tip
+  px(x + 3, y + 9, 6, 5, Y);              // sweeping down…
+  px(x + 8, y + 12, 7, 5, Y);
+  px(x + 14, y + 12, 6, 5, Y);            // bottom of the curve
+  px(x + 19, y + 9, 6, 5, Y);             // …sweeping back up
+  px(x + 23, y + 5, 4, 5, Y);
+  px(x + 25, y + 3, 2, 4, S);             // pointed right tip
+  px(x + 4, y + 12, 4, 3, S);             // shaded underside
+  px(x + 9, y + 15, 10, 3, S);
+  px(x + 19, y + 12, 4, 3, S);
+  px(x + 3, y + 10, 5, 2, R);             // the ridge, following the curve
+  px(x + 9, y + 13, 6, 2, R);
+  px(x + 16, y + 13, 5, 2, R);
+  px(x + 21, y + 10, 4, 2, R);
+  px(x + 3, y + 7, 5, 2, L);              // shiny highlight above the ridge
+  px(x + 9, y + 10, 6, 2, L);
+  px(x + 16, y + 10, 5, 2, L);
 }
 
 function drawMonkey() {
