@@ -56,6 +56,7 @@
     <div id="overlay">
       <h2 id="ov-title">MINX'S BANANA JUMP</h2>
       <p id="ov-text">Help Minx the monkey collect bananas!<br>
+      Minx <b>runs forward all by himself</b> — you just press <b>SPACE</b> (or tap) to jump.<br>
       Level 1 is just jumping. Level 2 adds swinging vines.<br>
       Every <b>3 bananas = 1 extra life</b>. Count along: 1, 2, 3!</p>
       <button class="big-btn" id="ov-btn">▶ START</button>
@@ -63,15 +64,13 @@
   </div>
 
   <div id="touch">
-    <button id="t-left" aria-label="Move left">◀</button>
-    <button id="t-jump" aria-label="Jump or let go of vine">⬆ JUMP</button>
-    <button id="t-right" aria-label="Move right">▶</button>
+    <button id="t-jump" aria-label="Jump or let go of vine">⬆ TAP TO JUMP ⬆</button>
   </div>
 
   <div class="hint">
-    Move: <kbd>◀</kbd> <kbd>▶</kbd> or <kbd>A</kbd> <kbd>D</kbd> &nbsp;•&nbsp;
-    Jump / let go of a vine: <kbd>SPACE</kbd> &nbsp;•&nbsp;
-    Grab a vine: walk into it &nbsp;•&nbsp; Restart level: <kbd>R</kbd>
+    Minx runs forward on his own &nbsp;•&nbsp;
+    The one key you need — Jump / let go of a vine: <kbd>SPACE</kbd> (or click / tap) &nbsp;•&nbsp;
+    Grab a vine: jump toward it &nbsp;•&nbsp; Restart level: <kbd>R</kbd>
   </div>
 
 <script>
@@ -80,6 +79,11 @@
    MINX'S BANANA JUMP
    A simple, kid-friendly 8-bit platformer.
    Design rules (kept deliberately gentle for young players):
+   - Minx AUTO-RUNS forward at one steady speed, Geometry Dash style.
+     There is exactly ONE action: SPACE / click / tap to jump (and to let
+     go of a vine). No steering keys at all.
+   - Minx has a running animation (pumping legs and arms, little bob) and
+     a different jumping animation (arms up, legs tucked).
    - One new idea per level: Level 1 = jumping only. Level 2 = vines.
    - Minx jumps gently (about 100px high) — enough for one platform step, no more.
    - No running underneath to the finish: after the start, Level 1 is water
@@ -151,9 +155,10 @@ function bindTouch(id, on, off) {
   el.addEventListener('pointerleave', end);
   el.addEventListener('pointercancel', end);
 }
-bindTouch('t-left',  () => keys.arrowleft = true,  () => keys.arrowleft = false);
-bindTouch('t-right', () => keys.arrowright = true, () => keys.arrowright = false);
 bindTouch('t-jump',  () => { if (!keys.jump) jumpPressed = true; keys.jump = true; }, () => keys.jump = false);
+// Tapping or clicking the game itself also jumps — one simple action for kids.
+canvas.addEventListener('pointerdown', () => { if (!keys.jump) jumpPressed = true; keys.jump = true; });
+addEventListener('pointerup', () => { keys.jump = false; });
 
 /* ---------- levels ----------
    platforms: [x, y, width]  — one-way tops: you jump up through them and land on top.
@@ -166,7 +171,7 @@ const WATER_Y = 412;              // splash line: feet below this = in the water
 const LEVELS = [
   {
     name: 'Level 1 — Little Hops',
-    intro: 'Just jumping! Hop from platform to platform over the water. Reach the golden tree!',
+    intro: 'Minx runs on his own — press SPACE to jump from platform to platform over the water!',
     world: 2660,
     grounds: [[0, 360]],                        // solid ground ONLY at the start…
     platforms: [                                // …after that, platforms over water are the only way across
@@ -189,28 +194,38 @@ const LEVELS = [
   },
   {
     name: 'Level 2 — Vine Swings',
-    intro: 'New idea: vines! Jump to grab a vine, swing gently, press SPACE to let go!',
-    world: 2800,
-    grounds: [[0, 620], [900, 580], [1760, 1040]],   // water gaps between the ground: vines are the only way over (landing edges sit just past each vine's swing reach, so a gentle release still lands safely)
-    platforms: [
-      [180, 330, 96], [330, 276, 96],
-      [1000, 320, 96], [1150, 264, 96], [1300, 320, 96],
-      [1880, 326, 96], [2030, 270, 96], [2180, 214, 96], [2330, 268, 96],
+    intro: 'Minx keeps running! Jump to grab a vine, swing gently, SPACE again to let go!',
+    world: 2700,
+    grounds: [[0, 360]],                        // like Level 1: solid ground ONLY at the start…
+    platforms: [                                // …then platform clusters over water, linked by vines — no running underneath, ever
+      // cluster A
+      [150, 338, 96], [292, 292, 96], [434, 246, 96], [576, 292, 96], [718, 338, 96],
+      // (vine 1 crosses from here)
+      [1070, 330, 140],
+      // cluster B
+      [1252, 284, 96], [1394, 238, 96], [1536, 284, 96],
+      // (vine 2 crosses from here)
+      [1880, 330, 140],
+      // cluster C, climbing to the tree
+      [2062, 284, 96], [2204, 238, 96], [2346, 192, 96],
+      [2470, 192, 190],                         // the golden-tree platform (the finish)
     ],
     bananas: [
-      [220, 298], [370, 244],
-      [755, 250],                       // mid-swing prize over the first gap
-      [1040, 288], [1190, 232], [1340, 288],
-      [1605, 250],                      // mid-swing prize over the second gap
-      [1920, 294], [2070, 238], [2220, 182], [2370, 236],
-      [90, 352], [1500, 352], [2560, 352],
+      [190, 306], [332, 260], [474, 214], [616, 260], [758, 306],
+      [940, 262],                       // mid-swing prize over the first vine gap
+      [1120, 298],
+      [1292, 252], [1434, 206], [1576, 252],
+      [1750, 262],                      // mid-swing prize over the second vine gap
+      [1930, 298],
+      [2102, 252], [2244, 206], [2386, 160],
+      [80, 352],
     ],
     vines: [
-      [770, 60, 240],                   // crosses the gap 620 -> 900
-      [1620, 60, 240],                  // crosses the gap 1480 -> 1760
+      [950, 60, 200],                   // cluster A (ends x=814) -> landing platform at x=1070
+      [1760, 60, 200],                  // cluster B (ends x=1632) -> landing platform at x=1880
     ],
-    goalX: 2660,
-    goalY: GROUND_Y,
+    goalX: 2520,
+    goalY: 192,                                 // finish counts only UP on the tree platform — never from underneath
   },
 ];
 
@@ -220,6 +235,7 @@ let levelIndex = 0;
 let level = LEVELS[0];
 let lives = 3, score = 0, totalBananas = 0;
 let levelStart = { bananas: 0, score: 0 };   // totals when the current level began — restored on a level restart, so bananas never double-count
+let startTimer = 0;                          // short "get ready" pause before Minx starts auto-running
 let cameraX = 0;
 let popups = [];                // floating texts: {x,y,text,t,color}
 let banner = null;              // big centre message: {text, t}
@@ -244,7 +260,8 @@ function startLevel(idx, keepLives) {
   player.vx = 0; player.vy = 0; player.swinging = null;
   player.safeX = 40; player.safeY = player.y;
   cameraX = 0; popups = [];
-  banner = { text: level.name, sub: level.intro, t: 170 };
+  startTimer = 45;
+  banner = { text: level.name, sub: level.intro, t: 110 };
   state = 'playing';
   overlay.classList.add('hidden');
 }
@@ -304,7 +321,7 @@ function completeLevel() {
   if (levelIndex + 1 < LEVELS.length) {
     state = 'levelComplete';
     showOverlay('🎉 ' + level.name + ' done!',
-      `Great jumping, Minx!<br>Bananas so far: <b>${totalBananas}</b> &nbsp;•&nbsp; Score: <b>${score}</b><br>Next: vines! Walk into a vine to swing, press SPACE to let go.`,
+      `Great jumping, Minx!<br>Bananas so far: <b>${totalBananas}</b> &nbsp;•&nbsp; Score: <b>${score}</b><br>Next: vines! Jump to grab one, swing gently, press SPACE to let go.`,
       '▶ LEVEL 2', () => { levelStart = { bananas: totalBananas, score: score }; startLevel(levelIndex + 1, true); });
   } else {
     state = 'win';
@@ -335,11 +352,9 @@ function solids() {
 
 function update() {
   if (state !== 'playing') return;
+  if (startTimer > 0) { startTimer--; return; }   // "get ready" — Minx waits, then runs on his own
   if (banner && --banner.t <= 0) banner = null;
   popups = popups.filter(p => --p.t > 0);
-
-  const left  = keys.arrowleft  || keys.a;
-  const right = keys.arrowright || keys.d;
 
   if (player.swinging) {
     const v = player.swinging;
@@ -356,9 +371,8 @@ function update() {
     }
     jumpPressed = false;
   } else {
-    if (left)  { player.vx = -MOVE; player.face = -1; }
-    else if (right) { player.vx = MOVE; player.face = 1; }
-    else player.vx = 0;
+    player.vx = MOVE;                             // auto-run: Minx always moves forward, on the ground and in the air
+    player.face = 1;
 
     player.vy += GRAV;
     if (player.vy > 16) player.vy = 16;
@@ -390,7 +404,9 @@ function update() {
     // The vine keeps its own gentle rhythm when grabbed (its phase is NOT reset), so there's no sudden jerk.
     for (const v of vines) {
       if (Math.abs(player.x + player.w / 2 - v.ax) < 42 && player.y > v.ay + 50 && player.y < v.ay + v.len + 60) {
-        player.swinging = v; sfx.swing();
+        player.swinging = v;
+        v.t = Math.asin(Math.max(-1, Math.min(1, v.angle / 0.62)));   // start the swing from the rope's current position — no teleport snap, and it swings forward
+        sfx.swing();
         popups.push({ x: player.x, y: player.y - 24, text: 'SPACE to let go!', t: 70, color: '#ffffff' });
         break;
       }
@@ -399,7 +415,9 @@ function update() {
     if (player.y + player.h > WATER_Y + 16) { loseLife(); return; }   // splash!
   }
 
-  player.animT += Math.abs(player.vx) > 0.5 || player.swinging ? 0.18 : 0.05;
+  // Animation clock: fast while running on the ground (pumping legs),
+  // slow in the air (held jump pose), medium while swinging.
+  player.animT += player.swinging ? 0.1 : (player.onGround ? 0.34 : 0.06);
 
   for (const b of bananasLeft) {
     if (!b.taken &&
@@ -505,27 +523,50 @@ function drawBanana(x, y) {
 }
 
 function drawMonkey() {
-  const x = player.x - cameraX, y = player.y;
-  const legSwing = player.onGround && Math.abs(player.vx) > 0.5 ? Math.round(Math.sin(player.animT) * 4) : 0;
+  const x = player.x - cameraX;
+  const running = player.onGround && !player.swinging;
+  const jumping = !player.onGround && !player.swinging;
+  // a little bob while running; body rises slightly in the jump pose
+  const y = player.y - (running ? Math.round(Math.abs(Math.sin(player.animT)) * 2) : 0);
   const brown = '#795548', dark = '#5d4037', tan = '#d7a679';
-  // tail
-  px(x - 6 * player.face + (player.face > 0 ? 0 : 28), y + 20, 8, 5, dark);
+  // tail (sticks up in the air, wags while running)
+  if (jumping) px(x - 4, y + 8, 8, 5, dark);
+  else px(x - 6, y + 20 + (running ? Math.round(Math.sin(player.animT) * 2) : 0), 8, 5, dark);
   // legs
-  px(x + 6, y + 32 + legSwing, 8, 8, dark);
-  px(x + 20, y + 32 - legSwing, 8, 8, dark);
+  if (jumping) {
+    // JUMPING pose: both legs tucked up under the body
+    px(x + 7, y + 33, 9, 6, dark);
+    px(x + 19, y + 33, 9, 6, dark);
+  } else if (player.swinging) {
+    // dangling legs while on a vine
+    px(x + 8, y + 33, 7, 7, dark);
+    px(x + 19, y + 33, 7, 7, dark);
+  } else {
+    // RUNNING pose: legs pump back and forth, opposite to each other
+    const s = Math.round(Math.sin(player.animT) * 5);
+    px(x + 6 - Math.max(0, s), y + 32 - Math.max(0, -s), 9, 8, dark);
+    px(x + 20 - Math.max(0, -s), y + 32 - Math.max(0, s), 9, 8, dark);
+  }
   // body
   px(x + 5, y + 14, 24, 20, brown);
   px(x + 11, y + 18, 12, 13, tan);
-  // arms (up while swinging)
-  if (player.swinging) { px(x + 13, y - 8, 8, 14, dark); }
-  else { px(x + 0, y + 16, 6, 14, dark); px(x + 28, y + 16, 6, 14, dark); }
+  // arms
+  if (player.swinging) { px(x + 13, y - 8, 8, 14, dark); }              // holding the vine overhead
+  else if (jumping) { px(x - 1, y + 1, 6, 13, dark); px(x + 29, y + 1, 6, 13, dark); }  // JUMPING pose: arms thrown up
+  else {
+    // RUNNING pose: arms pump opposite to the legs
+    const a = Math.round(Math.sin(player.animT) * 3);
+    px(x + 0, y + 16 - a, 6, 14, dark);
+    px(x + 28, y + 16 + a, 6, 14, dark);
+  }
   // ears + head
   px(x + 1, y + 4, 6, 9, brown); px(x + 27, y + 4, 6, 9, brown);
   px(x + 6, y, 22, 18, brown);
   px(x + 10, y + 8, 14, 10, tan);                 // face
   px(x + 12, y + 5, 3, 3, '#212121');              // eyes
   px(x + 20, y + 5, 3, 3, '#212121');
-  px(x + 15, y + 13, 5, 2, '#212121');             // smile
+  if (jumping) { px(x + 15, y + 12, 5, 4, '#212121'); }   // "ooh!" mouth in the air
+  else px(x + 15, y + 13, 5, 2, '#212121');             // smile
 }
 
 function drawHUD() {

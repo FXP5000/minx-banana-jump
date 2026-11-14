@@ -8,11 +8,14 @@ Help **Minx the monkey** jump across platforms, collect bananas, and reach the g
 
 Just open `index.html` in any web browser — no build step, no downloads, nothing to install.
 
-- **Move:** ◀ ▶ arrow keys, or A / D (on phones/tablets, use the on-screen buttons)
-- **Jump:** SPACE (or ⬆ / W)
-- **Grab a vine (Level 2):** walk into it — Minx grabs on automatically
-- **Let go of a vine:** SPACE
+Minx **runs forward all by himself**, Geometry Dash style — there's just **one key** to learn:
+
+- **Jump:** SPACE (or click / tap the game — on phones/tablets there's one big TAP TO JUMP button)
+- **Grab a vine (Level 2):** jump toward it — Minx grabs on automatically
+- **Let go of a vine:** SPACE again
 - **Restart the level:** R
+
+Minx has a **running animation** (pumping legs and arms, a little bob) and a **jumping animation** (arms up, legs tucked, "ooh!" face).
 
 ## The rules (kept simple for kids)
 
@@ -28,7 +31,7 @@ Just open `index.html` in any web browser — no build step, no downloads, nothi
 ## The levels
 
 - **Level 1 — Little Hops:** Just jumping. Flat ground to start, a first platform that's a little hop up, then platforms over the water that gradually get higher and come back down, climbing at the end to the golden tree's platform. Bananas show the way.
-- **Level 2 — Vine Swings:** One new idea — vines. Swing gently across the wide water gaps to reach the far side and the bananas floating in the middle.
+- **Level 2 — Vine Swings:** One new idea — vines. Like Level 1, the ground is only at the start, so there's no running underneath: platform clusters over the water are linked by vines. Swing gently across each vine gap to the landing platform on the other side, then climb to the golden tree's platform.
 
 ## Made with
 
