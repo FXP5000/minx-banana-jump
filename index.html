@@ -59,7 +59,7 @@
       Minx <b>runs forward all by himself</b> — you just press <b>SPACE</b> (or tap) to jump.<br>
       Level 1 is just jumping. Level 2 adds swinging vines.<br>
       Every <b>3 bananas = 1 extra life</b>. Count along: 1, 2, 3!<br>
-      Beat both levels to unlock the <b>🌴 Endless Level</b> — how high can you score?</p>
+      Beat all three levels to unlock the <b>🌴 Endless Level</b> — how high can you score?</p>
       <button class="big-btn" id="ov-btn">▶ START</button>
     </div>
   </div>
@@ -134,6 +134,7 @@ const sfx = {
   fall:    () => beep(160, 0.25, 'sawtooth'),
   win:     () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.15), i * 110)); },
   swing:   () => beep(420, 0.08, 'triangle'),
+  bonk:    () => beep(140, 0.09, 'square', 0.06),
 };
 
 /* ---------- input ---------- */
@@ -197,37 +198,75 @@ const LEVELS = [
   {
     name: 'Level 2 — Vine Swings',
     intro: 'Minx keeps running! Jump to grab a vine, swing gently, SPACE again to let go!',
-    world: 4370,
+    world: 3930,
     grounds: [[0, 420]],                        // like Level 1: solid ground ONLY at the start…
     platforms: [                                // …then wide, spread-out platform clusters over the creek, linked by LONG vines — no running underneath, ever
       // cluster A
       [170, 338, 180], [432, 296, 180], [694, 254, 180], [956, 296, 180],
       // (vine 1 crosses from here — it reaches all the way to the landing platform)
       [1400, 340, 190],
-      // cluster B
-      [1852, 298, 180], [2114, 256, 180], [2376, 298, 180],
+      // cluster B — every gap is the same friendly 82px as everywhere else
+      // (an earlier layout accidentally left 262px gaps here — impossible jumps, now fixed)
+      [1672, 298, 180], [1934, 256, 180], [2196, 298, 180],
       // (vine 2 crosses from here)
-      [2820, 340, 190],
+      [2640, 340, 190],
       // cluster C, climbing to the tree
-      [3272, 298, 180], [3534, 256, 180], [3796, 214, 180],
-      [4058, 214, 220],                         // the golden-tree platform (the finish)
+      [2912, 298, 180], [3174, 256, 180], [3436, 214, 180],
+      [3618, 214, 220],                         // the golden-tree platform (the finish)
     ],
     bananas: [
       [248, 306], [510, 264], [772, 222], [1034, 264],
       [1265, 320],                      // mid-swing prize on the first vine
       [1475, 308],
-      [1930, 266], [2192, 224], [2454, 266],
-      [2685, 320],                      // mid-swing prize on the second vine
-      [2895, 308],
-      [3350, 266], [3612, 224], [3874, 182],
+      [1750, 266], [2012, 224], [2274, 266],
+      [2505, 320],                      // mid-swing prize on the second vine
+      [2715, 308],
+      [2990, 266], [3252, 224], [3514, 182],
       [90, 352],
     ],
     vines: [
       [1280, 60, 260],                  // cluster A (ends x=1136) -> landing platform at x=1400: the swing reaches right over it
-      [2700, 60, 260],                  // cluster B (ends x=2556) -> landing platform at x=2820: the swing reaches right over it
+      [2520, 60, 260],                  // cluster B (ends x=2376) -> landing platform at x=2640: the swing reaches right over it
     ],
-    goalX: 4118,
+    goalX: 3678,
     goalY: 214,                                 // finish counts only UP on the tree platform — never from underneath
+  },
+  {
+    // LEVEL 3 teaches TIMING: when to jump and when NOT to jump.
+    // Minx runs through a tunnel carved into a giant tree. The tunnel floor
+    // has gaps (jump those!) — but thick roots hang from the tunnel roof,
+    // and jumping under one bonks his head (don't jump there!).
+    name: '🌳 LEVEL 3 — TUNNEL TREE',
+    intro: 'Run through the tree tunnel! Jump the gaps — but DON\'T jump under the hanging roots!',
+    world: 4140,
+    trunk: [560, 2960],                         // the giant tree: tunnel entrance x=560, exit x=2960
+    grounds: [                                  // solid floor, with two gaps inside the tunnel
+      [0, 560],                                 // outside, up to the tunnel entrance
+      [560, 640],                               // tunnel floor A (560–1200)
+      [1296, 640],                              // tunnel floor B (1296–1936) — a 96px gap to jump
+      [2032, 928],                              // tunnel floor C (2032–2960) — another 96px gap, then the exit
+    ],
+    ceilings: [                                 // [x, width, underside y] — jumping into these = BONK
+      [560, 2400, 232],                         // the tunnel roof itself (high enough to jump the gaps under it)
+      [800, 110, 296], [1560, 110, 296],        // hanging roots: run under, DON'T jump
+      [2300, 110, 296], [2680, 110, 296],
+    ],
+    platforms: [                                // after the exit, climb the outside of the tree
+      [3050, 338, 180], [3312, 296, 180], [3574, 254, 180],
+      [3836, 214, 220],                         // up in the branches: the golden-tree platform (the finish)
+    ],
+    bananas: [
+      [700, 344], [843, 344], [1050, 344],      // along floor A (843 is under a root — grab it WITHOUT jumping)
+      [1237, 338],                              // over the first floor gap — jump for it!
+      [1450, 344], [1603, 344],                 // floor B (1603 is under a root)
+      [1973, 338],                              // over the second gap
+      [2150, 344], [2343, 344], [2500, 344], [2723, 344],   // floor C (2343 & 2723 under roots)
+      [3128, 306], [3390, 264], [3652, 222],    // the climb out
+      [90, 352],
+    ],
+    vines: [],
+    goalX: 3896,
+    goalY: 214,
   },
 ];
 
@@ -253,6 +292,7 @@ const player = {
   x: 40, y: GROUND_Y - 40, w: 34, h: 40, vx: 0, vy: 0,
   onGround: false, face: 1, coyote: 0, animT: 0,
   grabCooldown: 0,              // after letting go of a vine, Minx can't re-grab one until this runs out — this is what makes SPACE actually let go
+  bonked: 0,                    // head-bonk cooldown (Tunnel Tree roots)
   swinging: null,               // vine object while swinging
   safeX: 40, safeY: GROUND_Y - 40,
 };
@@ -368,9 +408,13 @@ function completeLevel() {
   sfx.win();
   if (levelIndex + 1 < LEVELS.length) {
     state = 'levelComplete';
+    const nextTips = [
+      'Next: vines! Jump to grab one, swing gently, press SPACE to let go.',
+      'Next: the Tunnel Tree! Jump the gaps in the tunnel floor — but DON\'T jump under the hanging roots, or BONK!',
+    ];
     showOverlay('🎉 ' + level.name + ' done!',
-      `Great jumping, Minx!<br>Bananas so far: <b>${totalBananas}</b> &nbsp;•&nbsp; Score: <b>${score}</b><br>Next: vines! Jump to grab one, swing gently, press SPACE to let go.`,
-      '▶ LEVEL 2', () => { levelStart = { bananas: totalBananas, score: score }; startLevel(levelIndex + 1, true); });
+      `Great jumping, Minx!<br>Bananas so far: <b>${totalBananas}</b> &nbsp;•&nbsp; Score: <b>${score}</b><br>${nextTips[levelIndex] || ''}`,
+      '▶ LEVEL ' + (levelIndex + 2), () => { levelStart = { bananas: totalBananas, score: score }; startLevel(levelIndex + 1, true); });
   } else {
     state = 'win';
     showOverlay('🏆 YOU WIN!',
@@ -410,8 +454,8 @@ function ensureEndless() {
 }
 
 function startEndless() {
-  levelIndex = 2;
-  level = { name: '🌴 LEVEL 3 — ENDLESS RUN', intro: 'No finish line — how far can Minx go? Chase the high score!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], goalX: Infinity, goalY: -9999, endless: true };
+  levelIndex = 3;
+  level = { name: '🌴 LEVEL 4 — ENDLESS RUN', intro: 'No finish line — how far can Minx go? Chase the high score!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], goalX: Infinity, goalY: -9999, endless: true };
   lives = 3; runBananas = 0; bestBeatenShown = false;
   bananasLeft = []; vines = []; particles = [];
   player.x = 40; player.y = GROUND_Y - player.h;
@@ -453,6 +497,7 @@ function update() {
   popups = popups.filter(p => --p.t > 0);
   stepParticles();
   if (player.grabCooldown > 0) player.grabCooldown--;
+  if (player.bonked > 0) player.bonked--;
   ensureEndless();
   if (level.endless) {   // keep the high score up to date, live
     const sc = endlessScore();
@@ -510,6 +555,19 @@ function update() {
         player.vy = 0;
         player.onGround = true;
         if (s.ground || level.endless) { player.safeX = player.x; player.safeY = player.y; }   // in the endless run, every platform is a checkpoint
+      }
+    }
+
+    // Ceilings (Tunnel Tree): jumping up into the tunnel roof or a hanging
+    // root bonks Minx's head and stops the jump — the "don't jump here" lesson.
+    for (const c of (level.ceilings || [])) {
+      const overlapX = player.x + player.w > c[0] + 2 && player.x < c[0] + c[1] - 2;
+      if (overlapX && player.vy < 0 && player.y < c[2] && player.y + player.h > c[2]) {
+        player.y = c[2]; player.vy = 0.5;
+        if (player.bonked <= 0) {
+          popups.push({ x: player.x - 8, y: player.y - 26, text: 'BONK! Too tall!', t: 60, color: '#ffccbc' });
+          sfx.bonk(); player.bonked = 55;
+        }
       }
     }
 
@@ -631,6 +689,34 @@ function drawWorld() {
       const sx = edgeX - cameraX; if (sx < -12 || sx > W + 6) continue;
       px(sx, GROUND_Y - 15, 3, 17, '#2e7d32');
       px(sx + 5, GROUND_Y - 20, 3, 22, '#388e3c');
+    }
+  }
+  // the giant Tunnel Tree (Level 3): a huge trunk with a hollow tunnel through it
+  if (level.trunk) {
+    const tx0 = level.trunk[0] - cameraX, tx1 = level.trunk[1] - cameraX, tw = tx1 - tx0;
+    if (tx1 > -60 && tx0 < W + 60) {
+      // leafy canopy spreading over the top of the giant tree
+      for (let bx = tx0 - 30; bx < tx1 + 20; bx += 64) {
+        ctx.fillStyle = '#2e7d32'; ctx.beginPath(); ctx.arc(bx + 30, 128, 44, 0, 6.29); ctx.fill();
+        ctx.fillStyle = '#388e3c'; ctx.beginPath(); ctx.arc(bx + 12, 110, 26, 0, 6.29); ctx.fill();
+      }
+      px(tx0, 140, tw, 92, '#6d4c2f');                       // trunk above the tunnel (roof underside at y=232)
+      px(tx0, 140, tw, 10, '#795548');
+      for (let bx = tx0 + 22; bx < tx1 - 10; bx += 52) px(bx, 150, 6, 76, '#5d4037');   // bark stripes
+      px(tx0, 226, tw, 6, '#4e342e');                       // roof edge line
+      px(tx0, 232, tw, GROUND_Y - 232, '#4e342e');          // the hollow inside (back wall)
+      px(tx0, 300, tw, 4, '#3e2723'); px(tx0, 348, tw, 4, '#3e2723');   // carved rings inside
+      px(tx0 - 8, 140, 12, GROUND_Y - 140, '#5d4037');      // entrance pillar
+      px(tx1 - 4, 140, 12, GROUND_Y - 140, '#5d4037');      // exit pillar
+      px(tx0 - 14, 372, 26, 12, '#5d4037'); px(tx1 - 12, 372, 26, 12, '#5d4037');   // roots at the base
+      // hanging roots inside the tunnel (the bonk hazards)
+      for (const c of (level.ceilings || [])) {
+        if (c[2] <= 232) continue;
+        const rx = c[0] - cameraX;
+        px(rx + 8, 232, c[1] - 16, c[2] - 232, '#5d4037');
+        px(rx + 20, 232, c[1] - 40, c[2] - 232 + 10, '#4e342e');
+        px(rx + 14, c[2] - 4, c[1] - 28, 6, '#2e7d32');     // mossy root tips
+      }
     }
   }
   // hanging jungle vines in the background (decoration only — the swinging ones come later)
