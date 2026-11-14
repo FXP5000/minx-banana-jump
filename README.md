@@ -8,7 +8,7 @@ Help **Minx the monkey** jump across platforms, collect bananas, and reach the g
 
 Just open `index.html` in any web browser — no build step, no downloads, nothing to install.
 
-Minx **runs forward all by himself**, Geometry Dash style — there's just **one key** to learn:
+Minx **runs forward all by himself** — there's just **one key** to learn:
 
 - **Jump:** SPACE (or click / tap the game — on phones/tablets there's one big TAP TO JUMP button)
 - **Grab a vine (Level 2):** jump toward it — Minx grabs on automatically
