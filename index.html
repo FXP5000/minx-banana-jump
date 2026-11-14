@@ -239,7 +239,7 @@ const LEVELS = [
     name: '🌳 LEVEL 3 — TUNNEL TREE',
     intro: 'Run through the tree tunnel! Jump the gaps — but DON\'T jump under the hanging roots!',
     world: 4140,
-    trunk: [560, 2960],                         // the giant tree: tunnel entrance x=560, exit x=2960
+    trunks: [[560, 2960]],                      // the giant tree: tunnel entrance x=560, exit x=2960
     grounds: [                                  // solid floor, with two gaps inside the tunnel
       [0, 560],                                 // outside, up to the tunnel entrance
       [560, 640],                               // tunnel floor A (560–1200)
@@ -430,10 +430,30 @@ function endlessPlatform(x, y, w) {
   genLast = { x, y, w };
 }
 
+// The endless mix: ALL THREE level ideas, in a repeating pattern —
+// P = jumping platforms (Level 1), V = vine swing (Level 2), T = tree tunnel (Level 3).
+const GEN_PLAN = ['P', 'P', 'P', 'V', 'P', 'P', 'T', 'P', 'P', 'V', 'P', 'T', 'P', 'P'];
+let genIdx = 0;
+
+function genTunnel() {
+  // A whole Tunnel Tree section, generated like Level 3: tunnel floor with
+  // one gap to jump, a roof, and two hanging roots not to jump under.
+  const startX = genLast.x + genLast.w;         // floor starts right where the last surface ends (Minx drops/runs straight in)
+  const LEN = 1500;
+  level.grounds.push([startX, 700], [startX + 796, LEN - 796]);
+  level.trunks.push([startX - 40, startX + LEN + 40]);
+  level.ceilings.push([startX - 40, LEN + 80, 232], [startX + 260, 110, 296], [startX + 950, 110, 296]);
+  for (const bx of [150, 304, 994, 1300]) bananasLeft.push({ x: startX + bx, y: 344, taken: false, bob: Math.random() * 6.28 });   // 304 & 994 sit under the roots — run, don't jump!
+  bananasLeft.push({ x: startX + 737, y: 338, taken: false, bob: Math.random() * 6.28 });   // over the tunnel floor gap
+  genLast = { x: startX + LEN, y: GROUND_Y, w: 0 };
+}
+
 function genNext() {
-  const last = genLast; genSeg++;
-  if (genSeg % 6 === 5) {
-    // every 6th gap is a vine gap: swing across to a landing platform
+  const last = genLast;
+  const kind = GEN_PLAN[genIdx % GEN_PLAN.length]; genIdx++;
+  if (kind === 'T') { genTunnel(); return; }
+  if (kind === 'V') {
+    // a vine gap: swing across to a landing platform
     vines.push({ ax: last.x + last.w + 140, ay: 60, len: 260, angle: 0, t: Math.random() * 6.28 });
     endlessPlatform(last.x + last.w + 280, 340, 190);
   } else {
@@ -448,6 +468,9 @@ function ensureEndless() {
   while (genLast.x < player.x + W + 700) genNext();
   if (cameraX > 600) {   // tidy up what's far behind, so the run can go forever
     level.platforms = level.platforms.filter(p => p[0] + p[2] > cameraX - 400);
+    level.grounds = level.grounds.filter(g => g[0] + g[1] > cameraX - 400);
+    level.ceilings = level.ceilings.filter(c => c[0] + c[1] > cameraX - 400);
+    level.trunks = level.trunks.filter(t => t[1] > cameraX - 400);
     bananasLeft = bananasLeft.filter(b => b.x > cameraX - 400);
     vines = vines.filter(v => v.ax > cameraX - 500);
   }
@@ -455,13 +478,13 @@ function ensureEndless() {
 
 function startEndless() {
   levelIndex = 3;
-  level = { name: '🌴 LEVEL 4 — ENDLESS RUN', intro: 'No finish line — how far can Minx go? Chase the high score!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], goalX: Infinity, goalY: -9999, endless: true };
+  level = { name: '🌴 LEVEL 4 — ENDLESS RUN', intro: 'No finish line — platforms, vines AND tree tunnels, all mixed together!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], ceilings: [], trunks: [], goalX: Infinity, goalY: -9999, endless: true };
   lives = 3; runBananas = 0; bestBeatenShown = false;
   bananasLeft = []; vines = []; particles = [];
   player.x = 40; player.y = GROUND_Y - player.h;
   player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
   player.safeX = 40; player.safeY = player.y;
-  genSeg = 0; genLast = { x: 0, y: GROUND_Y, w: 420 };   // the start ground acts as the "last platform"
+  genIdx = 0; genLast = { x: 0, y: GROUND_Y, w: 420 };   // the start ground acts as the "last platform"
   cameraX = 0; popups = [];
   ensureEndless();
   startTimer = 45;
@@ -691,33 +714,46 @@ function drawWorld() {
       px(sx + 5, GROUND_Y - 20, 3, 22, '#388e3c');
     }
   }
-  // the giant Tunnel Tree (Level 3): a huge trunk with a hollow tunnel through it
-  if (level.trunk) {
-    const tx0 = level.trunk[0] - cameraX, tx1 = level.trunk[1] - cameraX, tw = tx1 - tx0;
-    if (tx1 > -60 && tx0 < W + 60) {
-      // leafy canopy spreading over the top of the giant tree
-      for (let bx = tx0 - 30; bx < tx1 + 20; bx += 64) {
-        ctx.fillStyle = '#2e7d32'; ctx.beginPath(); ctx.arc(bx + 30, 128, 44, 0, 6.29); ctx.fill();
-        ctx.fillStyle = '#388e3c'; ctx.beginPath(); ctx.arc(bx + 12, 110, 26, 0, 6.29); ctx.fill();
-      }
-      px(tx0, 140, tw, 92, '#6d4c2f');                       // trunk above the tunnel (roof underside at y=232)
-      px(tx0, 140, tw, 10, '#795548');
-      for (let bx = tx0 + 22; bx < tx1 - 10; bx += 52) px(bx, 150, 6, 76, '#5d4037');   // bark stripes
-      px(tx0, 226, tw, 6, '#4e342e');                       // roof edge line
-      px(tx0, 232, tw, GROUND_Y - 232, '#4e342e');          // the hollow inside (back wall)
-      px(tx0, 300, tw, 4, '#3e2723'); px(tx0, 348, tw, 4, '#3e2723');   // carved rings inside
-      px(tx0 - 8, 140, 12, GROUND_Y - 140, '#5d4037');      // entrance pillar
-      px(tx1 - 4, 140, 12, GROUND_Y - 140, '#5d4037');      // exit pillar
-      px(tx0 - 14, 372, 26, 12, '#5d4037'); px(tx1 - 12, 372, 26, 12, '#5d4037');   // roots at the base
-      // hanging roots inside the tunnel (the bonk hazards)
-      for (const c of (level.ceilings || [])) {
-        if (c[2] <= 232) continue;
-        const rx = c[0] - cameraX;
-        px(rx + 8, 232, c[1] - 16, c[2] - 232, '#5d4037');
-        px(rx + 20, 232, c[1] - 40, c[2] - 232 + 10, '#4e342e');
-        px(rx + 14, c[2] - 4, c[1] - 28, 6, '#2e7d32');     // mossy root tips
-      }
-    }
+  // Tunnel Trees: giant trees with a hollow tunnel through the trunk.
+  // Drawn to look like TREES: a big round leafy crown, branches, a bark
+  // trunk with knots, and roots flaring into the ground at the base.
+  for (const tr of (level.trunks || [])) {
+    const tx0 = tr[0] - cameraX, tx1 = tr[1] - cameraX, tw = tx1 - tx0, mid = (tx0 + tx1) / 2;
+    if (tx1 < -260 || tx0 > W + 260) continue;
+    // branches reaching up into the crown
+    px(mid - 78, 100, 18, 48, '#5d4037'); px(mid - 96, 84, 16, 24, '#5d4037');
+    px(mid + 62, 96, 18, 52, '#5d4037'); px(mid + 84, 78, 16, 26, '#5d4037');
+    px(mid - 8, 88, 16, 60, '#5d4037');
+    // the crown: big overlapping leafy circles, wider than the trunk
+    const crown = [[mid, 84, 108, '#1b5e20'], [mid - 112, 112, 80, '#2e7d32'], [mid + 112, 112, 80, '#256b29'], [mid - 52, 62, 66, '#388e3c'], [mid + 58, 58, 62, '#2e7d32'], [mid - 150, 138, 52, '#1e6b24'], [mid + 150, 138, 52, '#1b5e20']];
+    for (const c of crown) { ctx.fillStyle = c[3]; ctx.beginPath(); ctx.arc(c[0], c[1], c[2], 0, 6.29); ctx.fill(); }
+    // bananas growing in the crown — it IS a banana-jungle tree
+    drawBanana(mid - 128, 96); drawBanana(mid + 96, 76); drawBanana(mid - 18, 44);
+    // hanging moss strands from the crown
+    for (const mx of [mid - 140, mid - 60, mid + 40, mid + 130]) { px(mx, 150, 4, 26, '#2e7d32'); px(mx - 3, 168, 10, 6, '#388e3c'); }
+    // trunk above the tunnel (roof underside at y=232)
+    px(tx0, 140, tw, 92, '#6d4c2f');
+    px(tx0, 140, tw, 10, '#795548');
+    for (let bx = tx0 + 22; bx < tx1 - 10; bx += 52) px(bx, 150, 6, 76, '#5d4037');   // bark stripes
+    const kx = tx0 + 190 + (tr[0] % 260);                   // a knot in the wood
+    ctx.fillStyle = '#4e342e'; ctx.beginPath(); ctx.arc(kx, 188, 11, 0, 6.29); ctx.fill();
+    ctx.fillStyle = '#3e2723'; ctx.beginPath(); ctx.arc(kx, 188, 5, 0, 6.29); ctx.fill();
+    px(tx0, 226, tw, 6, '#4e342e');                         // roof edge line
+    px(tx0, 232, tw, GROUND_Y - 232, '#4e342e');            // the hollow inside (back wall)
+    px(tx0, 300, tw, 4, '#3e2723'); px(tx0, 348, tw, 4, '#3e2723');   // carved rings inside
+    px(tx0 - 8, 140, 12, GROUND_Y - 140, '#5d4037');        // entrance pillar
+    px(tx1 - 4, 140, 12, GROUND_Y - 140, '#5d4037');        // exit pillar
+    // roots flaring out at the base, like a real tree gripping the ground
+    px(tx0 - 22, 366, 40, 18, '#5d4037'); px(tx0 - 14, 350, 26, 18, '#5d4037'); px(tx0 - 26, 378, 48, 8, '#4e342e');
+    px(tx1 - 18, 366, 40, 18, '#5d4037'); px(tx1 - 12, 350, 26, 18, '#5d4037'); px(tx1 - 22, 378, 48, 8, '#4e342e');
+  }
+  // hanging roots inside tunnels (the bonk hazards) — drawn wherever a level has them
+  for (const c of (level.ceilings || [])) {
+    if (c[2] <= 232) continue;
+    const rx = c[0] - cameraX; if (rx + c[1] < -20 || rx > W + 20) continue;
+    px(rx + 8, 232, c[1] - 16, c[2] - 232, '#5d4037');
+    px(rx + 20, 232, c[1] - 40, c[2] - 232 + 10, '#4e342e');
+    px(rx + 14, c[2] - 4, c[1] - 28, 6, '#2e7d32');         // mossy root tips
   }
   // hanging jungle vines in the background (decoration only — the swinging ones come later)
   for (let wx = Math.floor(cameraX / 210) * 210 + 130; wx < cameraX + W + 60; wx += 210) {
