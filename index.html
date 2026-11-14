@@ -1070,9 +1070,13 @@ function drawWorld() {
     const wdt = ex - sx;
     px(sx, WATER_Y + 10, wdt, H - WATER_Y - 10, '#0277bd');        // deep water
     px(sx, WATER_Y + 4, wdt, 8, '#039be5');                        // mid band
-    for (let bx = sx - (sx % 16); bx < ex; bx += 16) {             // stepped pixel surface (little 2px waves)
-      const wob = Math.abs(Math.sin((bx + cameraX) * 0.11)) < 0.5 ? 0 : 2;
-      px(bx, WATER_Y + wob, Math.min(16, ex - bx), 4, '#4fc3f7');
+    // stepped pixel surface — anchored to WORLD coordinates, so the wave
+    // pattern is carved into the world and NEVER crawls or shakes when
+    // the camera moves (it used to be screen-anchored, which shimmered).
+    const wStart = Math.max(s[0], cameraX), wEnd = Math.min(s[1], cameraX + W);
+    for (let wx = Math.floor(wStart / 16) * 16; wx < wEnd; wx += 16) {
+      const wob = Math.abs(Math.sin(wx * 0.11)) < 0.5 ? 0 : 2;
+      px(wx - cameraX, WATER_Y + wob, 16, 4, '#4fc3f7');
     }
   }
   // dirt banks where the water meets the land
