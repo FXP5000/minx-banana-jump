@@ -947,29 +947,6 @@ function px(x, y, w, h, color) {
   ctx.fillStyle = color;
   ctx.fillRect(Math.round(x), Math.round(y), Math.max(2, Math.round(w / 2) * 2), Math.max(2, Math.round(h / 2) * 2));
 }
-// BARK TEXTURE (Finbar): wavy vertical grooves, light ridges and flecks —
-// drawn over tree trunks so the bark looks like real bark, in pixels.
-function barkTexture(x, y, w, h, seed) {
-  // FULL bark coverage (Finbar): the trunk is covered in lots of little
-  // lines — dark groove dashes in tight staggered columns (they fit even
-  // on the narrowest background trunks), light dashes sprinkled between,
-  // and flecks. No single long line anywhere. All offsets are LOCAL
-  // (gx - x, gy - y) so the pattern never crawls when the camera moves.
-  for (let gx = x + 2 + (seed % 3); gx < x + w - 1; gx += 7) {
-    const stagger = ((gx - x) * 3 + seed) % 5;
-    for (let gy = y + 2 + stagger; gy < y + h - 5; gy += 11) {
-      const wob = (((gx - x) * 7 + (gy - y) * 13 + seed) % 3) - 1;
-      px(gx + wob, gy, 2, 7, '#4e342e');
-    }
-  }
-  for (let gx = x + 5 + (seed % 4); gx < x + w - 1; gx += 11) {
-    for (let gy = y + 5 + ((gx - x + seed) % 6); gy < y + h - 4; gy += 13) px(gx, gy, 2, 5, '#8d6e63');
-  }
-  const flecks = Math.floor(w * h / 260);
-  for (let f = 0; f < flecks; f++) {
-    px(x + ((seed * 31 + f * 47) % Math.max(4, w - 6)), y + ((seed * 17 + f * 29) % Math.max(4, h - 6)), 3, 2, '#795548');
-  }
-}
 // a circle made of pixel blocks (no smooth anti-aliased arcs anywhere)
 function blob(cx, cy, r, color) {
   for (let dy = -r; dy < r; dy += 4) {
@@ -1036,16 +1013,9 @@ function drawBackground() {
       blob(gx + 31, farFloor - 56 + twitch, 3, '#4fc3f7');                  // bright blue eye ring
       px(gx + 30, farFloor - 57 + twitch, 2, 2, '#263238');                  // pupil
       px(gx + 21, farFloor - 28, 3, 4, '#ffb300'); px(gx + 27, farFloor - 28, 3, 4, '#ffb300');   // feet gripping the branch
-    } else if (hsh < 0.56) {    // a scarlet MACAW on a branch
-      px(gx + 2, farFloor - 32, 46, 5, '#5d4037');
-      px(gx + 30, farFloor - 27, 10, 5, '#2e7d32');
-      px(gx + 18, farFloor - 48, 14, 19, '#e53935');
-      px(gx + 22, farFloor - 42, 10, 12, '#1e88e5');
-      px(gx + 24, farFloor - 30, 5, 16, '#1e88e5'); px(gx + 29, farFloor - 30, 4, 13, '#e53935');
-      px(gx + 30, farFloor - 47 + twitch, 8, 8, '#eceff1');
-      px(gx + 36, farFloor - 46 + twitch, 7, 5, '#ffecb3');
-      px(gx + 32, farFloor - 44 + twitch, 3, 3, '#263238');
-      px(gx + 21, farFloor - 29, 3, 4, '#78909c'); px(gx + 27, farFloor - 29, 3, 4, '#78909c');
+    } else if (hsh < 0.56) {    // a flowering bush
+      blob(gx + 24, farFloor - 13, 25, '#1d4020'); blob(gx + 6, farFloor - 7, 16, '#24512a'); blob(gx + 42, farFloor - 7, 16, '#1d4020');
+      px(gx + 12, farFloor - 22, 4, 4, '#ff80ab'); px(gx + 26, farFloor - 16, 4, 4, '#ffb300'); px(gx + 36, farFloor - 24, 4, 4, '#ff80ab'); px(gx + 20, farFloor - 10, 4, 4, '#e53935');
     } else if (hsh < 0.70) {    // a JAGUAR sitting in the shade
       px(gx + 14, farFloor - 13, 30, 13, '#f9a825');
       px(gx + 6, farFloor - 8, 12, 5, '#f9a825'); px(gx + 3, farFloor - 12, 6, 8, '#f9a825');
@@ -1064,14 +1034,9 @@ function drawBackground() {
       px(gx + 18, farFloor - 23 + twitch, 4, 3, '#5d4037'); px(gx + 27, farFloor - 23 + twitch, 4, 3, '#5d4037');
       px(gx + 22, farFloor - 19 + twitch, 5, 3, '#4e342e');
       px(gx + 15, farFloor - 15, 4, 6, '#8d6e63'); px(gx + 33, farFloor - 15, 4, 6, '#8d6e63');
-    } else if (hsh < 0.92) {    // a CAPYBARA by the water (the jungle's gentle giant)
-      px(gx + 2, farFloor - 3, 52, 3, '#4fc3f7');
-      px(gx + 10, farFloor - 19, 34, 17, '#795548');
-      px(gx + 38, farFloor - 23 + twitch, 17, 14, '#8d6e63');
-      px(gx + 41, farFloor - 27 + twitch, 5, 5, '#795548');
-      px(gx + 48, farFloor - 19 + twitch, 3, 3, '#263238');
-      px(gx + 50, farFloor - 14 + twitch, 4, 3, '#5d4037');
-      px(gx + 13, farFloor - 4, 5, 4, '#5d4037'); px(gx + 36, farFloor - 4, 5, 4, '#5d4037');
+    } else if (hsh < 0.92) {    // a leafy bush with red berries
+      blob(gx + 24, farFloor - 12, 24, '#1d4020'); blob(gx + 7, farFloor - 6, 15, '#24512a'); blob(gx + 41, farFloor - 6, 15, '#1d4020');
+      px(gx + 15, farFloor - 18, 4, 4, '#e53935'); px(gx + 30, farFloor - 10, 4, 4, '#e53935'); px(gx + 24, farFloor - 22, 4, 4, '#c62828');
     } else {                    // two tree frogs on a leaf by a tiny pond
       px(gx + 6, farFloor - 3, 44, 3, '#4fc3f7');
       px(gx + 12, farFloor - 6, 20, 4, '#2e7d32');
@@ -1084,13 +1049,16 @@ function drawBackground() {
   for (let i = 0; i < 10; i++) {
     const tx = ((i * 105 - cameraX * 0.55) % (W + 140) + W + 140) % (W + 140) - 70;
     px(tx + 26, 196, 13 + (i % 3) * 3, GROUND_Y - 186, '#6d4c2f');   // lighter trunk brown, so the dark bark grooves actually SHOW (they used to match the trunk colour and vanish)
-    barkTexture(tx + 26, 196, 13 + (i % 3) * 3, GROUND_Y - 196, i * 7 + 3);
     blob(tx + 32, 208, 56, greens[(i + 2) % greens.length]);
     blob(tx + 6, 232, 34, greens[i % greens.length]);
   }
-  // dense bushes along the floor behind the play area
+  // dense bushes along the floor behind the play area — ONLY where there is
+  // real ground underneath (Finbar: bushes over the creek looked like they
+  // were levitating). Ferns, flowers and mushrooms follow the same rule.
+  const onGround = (wx) => (level.grounds || []).some(g => wx >= g[0] - 20 && wx <= g[0] + g[1] + 6);
   for (let wx = Math.floor(cameraX / 84) * 84 - 84; wx < cameraX + W + 84; wx += 84) {   // camera-bounded (works for the endless world too)
     const sx = wx - cameraX; if (sx < -90 || sx > W + 40) continue;
+    if (!onGround(wx + 31)) continue;
     px(sx, GROUND_Y - 26, 62, 28, '#1b5e20');
     px(sx + 9, GROUND_Y - 38, 42, 16, '#2e7d32');
     px(sx + 18, GROUND_Y - 13, 5, 13, '#43a047'); px(sx + 36, GROUND_Y - 15, 5, 15, '#43a047');
@@ -1100,6 +1068,7 @@ function drawBackground() {
   // ferns unfurling along the floor (stepped pixel fronds)
   for (let wx = Math.floor(cameraX / 67) * 67 - 67; wx < cameraX + W + 67; wx += 67) {
     const sx = wx - cameraX + 20; if (sx < -50 || sx > W + 30) continue;
+    if (!onGround(wx + 20)) continue;
     const sway = Math.round(Math.sin(now / 700 + wx) * 1);
     for (let k = -2; k <= 2; k++) {
       const dir = Math.sign(k), reach = (3 - Math.abs(k)) * 4 + 6;
@@ -1112,6 +1081,7 @@ function drawBackground() {
   // flowers and berries sprinkled through the bushes
   for (let wx = Math.floor(cameraX / 53) * 53 - 53; wx < cameraX + W + 53; wx += 53) {
     const sx = wx - cameraX; if (sx < -20 || sx > W + 10) continue;
+    if (!onGround(wx + 20)) continue;
     const hsh = Math.abs(Math.sin(wx * 12.9898) * 43758.5453) % 1;
     if (hsh < 0.45) { px(sx + 8, GROUND_Y - 34, 5, 5, '#ff80ab'); px(sx + 10, GROUND_Y - 32, 2, 2, '#fff59d'); }
     else if (hsh < 0.8) { px(sx + 30, GROUND_Y - 22, 4, 4, '#e53935'); px(sx + 38, GROUND_Y - 27, 4, 4, '#e53935'); px(sx + 34, GROUND_Y - 18, 4, 4, '#c62828'); }
@@ -1119,6 +1089,7 @@ function drawBackground() {
   // mushrooms on the forest floor
   for (let wx = Math.floor(cameraX / 230) * 230 - 230; wx < cameraX + W + 230; wx += 230) {
     const sx = wx - cameraX + 90; if (sx < -30 || sx > W + 20) continue;
+    if (!onGround(wx + 97)) continue;
     px(sx + 4, GROUND_Y - 8, 6, 8, '#f5f0e1');
     px(sx, GROUND_Y - 14, 14, 7, '#e53935');
     px(sx + 3, GROUND_Y - 12, 3, 3, '#ffffff'); px(sx + 9, GROUND_Y - 10, 2, 2, '#ffffff');
@@ -1253,7 +1224,6 @@ function drawWorld() {
     // trunk above the tunnel (roof underside at y=232)
     px(tx0, 140, tw, 92, '#6d4c2f');
     px(tx0, 140, tw, 10, '#795548');
-    barkTexture(tx0 + 6, 148, tw - 12, 80, (tr[0] % 89) + 5);                        // full bark texture over the trunk
     const kx = tx0 + 190 + (tr[0] % 260);                   // a knot in the wood
     blob(kx, 188, 11, '#4e342e');
     blob(kx, 188, 5, '#3e2723');
@@ -1262,8 +1232,6 @@ function drawWorld() {
     px(tx0, 300, tw, 4, '#3e2723'); px(tx0, 348, tw, 4, '#3e2723');   // carved rings inside
     px(tx0 - 8, 140, 12, GROUND_Y - 140, '#5d4037');        // entrance pillar
     px(tx1 - 4, 140, 12, GROUND_Y - 140, '#5d4037');        // exit pillar
-    barkTexture(tx0 - 8, 140, 12, GROUND_Y - 140, 21);
-    barkTexture(tx1 - 4, 140, 12, GROUND_Y - 140, 47);
     // roots flaring out at the base, like a real tree gripping the ground
     px(tx0 - 22, 366, 40, 18, '#5d4037'); px(tx0 - 14, 350, 26, 18, '#5d4037'); px(tx0 - 26, 378, 48, 8, '#4e342e');
     px(tx1 - 18, 366, 40, 18, '#5d4037'); px(tx1 - 12, 350, 26, 18, '#5d4037'); px(tx1 - 22, 378, 48, 8, '#4e342e');
@@ -1325,7 +1293,6 @@ function drawWorld() {
   const gx = level.goalX - cameraX, gy = level.goalY;
   if (gx > -120 && gx < W + 60) {
     px(gx + 28, gy - 92, 18, 92, '#6d4c2f');
-    barkTexture(gx + 28, gy - 92, 18, 92, 7);
     px(gx, gy - 152, 74, 66, '#ffb300');
     px(gx + 12, gy - 170, 50, 22, '#ffd83d');
     drawBanana(gx + 26, gy - 130);
