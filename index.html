@@ -84,6 +84,9 @@
      go of a vine). No steering keys at all.
    - Minx has a running animation (pumping legs and arms, little bob) and
      a different jumping animation (arms up, legs tucked).
+   - Vines swing OUT FAR on a wide, slow arc all the time — the rope end
+     sweeps toward Minx as he approaches, and grabbing is based on reaching
+     the rope END (a big, forgiving target), so vines are easy to catch.
    - One new idea per level: Level 1 = jumping only. Level 2 = vines.
    - Minx jumps gently (about 100px high) — enough for one platform step, no more.
    - No running underneath to the finish: after the start, Level 1 is water
@@ -255,7 +258,7 @@ function startLevel(idx, keepLives) {
   level = LEVELS[idx];
   if (!keepLives) { /* new game resets handled by caller */ }
   bananasLeft = level.bananas.map(b => ({ x: b[0], y: b[1], taken: false, bob: Math.random() * 6.28 }));
-  vines = level.vines.map(v => ({ ax: v[0], ay: v[1], len: v[2], angle: 0.9, t: Math.random() * 6.28 }));
+  vines = level.vines.map(v => ({ ax: v[0], ay: v[1], len: v[2], angle: 0, t: Math.random() * 6.28 }));
   player.x = 40; player.y = GROUND_Y - player.h;
   player.vx = 0; player.vy = 0; player.swinging = null;
   player.safeX = 40; player.safeY = player.y;
@@ -356,6 +359,12 @@ function update() {
   if (banner && --banner.t <= 0) banner = null;
   popups = popups.filter(p => --p.t > 0);
 
+  // Vines swing OUT FAR all the time (wide arc, slow and gentle), so the rope
+  // end sweeps toward Minx as he runs up — much easier to jump onto.
+  for (const v of vines) {
+    if (player.swinging !== v) { v.t += 0.022; v.angle = Math.sin(v.t) * 0.62; }
+  }
+
   if (player.swinging) {
     const v = player.swinging;
     v.t += 0.022;                                         // slow, gentle swing
@@ -400,13 +409,18 @@ function update() {
       }
     }
 
-    // Grab a vine: jump toward it over a water gap — a wide, forgiving grab zone for kids.
-    // The vine keeps its own gentle rhythm when grabbed (its phase is NOT reset), so there's no sudden jerk.
+    // Grab a vine: the rope swings out far, and Minx grabs it by its END —
+    // if his hands (top-middle of his body) get anywhere near the swinging
+    // rope end, he catches it. A big, forgiving target for kids, and the
+    // vine keeps its own gentle rhythm (its phase is NOT reset on a grab).
     for (const v of vines) {
-      if (Math.abs(player.x + player.w / 2 - v.ax) < 42 && player.y > v.ay + 50 && player.y < v.ay + v.len + 60) {
-        player.swinging = v;
-        v.t = Math.asin(Math.max(-1, Math.min(1, v.angle / 0.62)));   // start the swing from the rope's current position — no teleport snap, and it swings forward
-        sfx.swing();
+      const endX = v.ax + Math.sin(v.angle) * v.len;
+      const endY = v.ay + Math.cos(v.angle) * v.len;
+      const handX = player.x + player.w / 2, handY = player.y + 6;
+      const nearEnd = Math.hypot(handX - endX, handY - endY) < 62;
+      const nearAnchorLine = Math.abs(handX - v.ax) < 42 && player.y > v.ay + 50 && player.y < v.ay + v.len + 60;
+      if (nearEnd || nearAnchorLine) {
+        player.swinging = v; sfx.swing();
         popups.push({ x: player.x, y: player.y - 24, text: 'SPACE to let go!', t: 70, color: '#ffffff' });
         break;
       }
@@ -487,7 +501,6 @@ function drawWorld() {
   // vines
   for (const v of vines) {
     const topX = v.ax - cameraX; if (topX < -160 || topX > W + 160) continue;
-    if (!player.swinging || player.swinging !== v) v.angle = Math.sin(Date.now() / 1500 + v.ax) * 0.14;
     const endX = topX + Math.sin(v.angle) * v.len;
     const endY = v.ay + Math.cos(v.angle) * v.len;
     ctx.strokeStyle = '#2e7d32'; ctx.lineWidth = 6;
