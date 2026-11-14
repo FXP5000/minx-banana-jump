@@ -1083,7 +1083,7 @@ function drawBackground() {
   // a thicket of trunks below the canopy, packed across the screen
   for (let i = 0; i < 10; i++) {
     const tx = ((i * 105 - cameraX * 0.55) % (W + 140) + W + 140) % (W + 140) - 70;
-    px(tx + 26, 196, 13 + (i % 3) * 3, GROUND_Y - 186, '#4e342e');
+    px(tx + 26, 196, 13 + (i % 3) * 3, GROUND_Y - 186, '#6d4c2f');   // lighter trunk brown, so the dark bark grooves actually SHOW (they used to match the trunk colour and vanish)
     barkTexture(tx + 26, 196, 13 + (i % 3) * 3, GROUND_Y - 196, i * 7 + 3);
     blob(tx + 32, 208, 56, greens[(i + 2) % greens.length]);
     blob(tx + 6, 232, 34, greens[i % greens.length]);
