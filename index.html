@@ -1338,38 +1338,39 @@ function drawWorld() {
       [cx - 40, base - 182], [cx + 36, base - 184], [cx - 4, base - 206], [cx - 150, base - 104], [cx + 152, base - 106]];
     for (const hb of hang) { px(hb[0] + 11, hb[1] - 6, 3, 7, '#6d4c2f'); drawBanana(hb[0], hb[1]); }
     drawBanana(cx - 58, base - 232); drawBanana(cx + 58, base - 234);   // a couple nestled in the crown
-    // golden sparkles (Finbar): fixed in place on the crown, twinkling
-    // SLOWLY — a little plus-star that gently swells and fades where it
-    // sits. They never jump around (the old ones teleported every 400ms
-    // and read as a weird moving border).
+    // golden sparkles (Finbar): glued to the crown, ONE fixed size, and
+    // they only FADE — a smooth alpha swell, no popping in/out, no size
+    // jumps (the size flipping was the jitter he saw while moving).
     const SPARKS = [[-96, -214], [-30, -238], [44, -226], [104, -196], [-58, -186], [12, -262], [78, -248]];
     for (let si = 0; si < SPARKS.length; si++) {
-      const ph = Math.sin(Date.now() / 1300 + si * 1.7);
-      if (ph < 0.1) continue;
-      const ss = ph > 0.75 ? 3 : 2, sx = cx + SPARKS[si][0], sy = base + SPARKS[si][1];
-      px(sx - ss, sy - 1, ss * 2 + 2, 2, '#fff9c4'); px(sx - 1, sy - ss, 2, ss * 2 + 2, '#fff9c4');
+      ctx.globalAlpha = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(Date.now() / 1500 + si * 1.7));
+      const sx = cx + SPARKS[si][0], sy = base + SPARKS[si][1];
+      px(sx - 3, sy - 1, 8, 2, '#fff9c4'); px(sx - 1, sy - 3, 2, 8, '#fff9c4');
     }
+    ctx.globalAlpha = 1;
   }
 }
 
 function drawBanana(x, y) {
-  // A BANANA CRESCENT (Finbar): shaped like a crescent moon — one smooth
-  // curved band, pointed tips, a small stem at one end, ONE flat golden
-  // colour. Drawn row by row like a pixel sprite. Nothing else on it:
-  // no bands, no dots, no patterns.
+  // A REGULAR BANANA (Finbar): a plump, shallow curve — thick body, a
+  // wide rounded bottom (NOT a V), one end rising to the stem, the other
+  // tapering to a point with a tiny dark tip. One flat golden colour,
+  // drawn row by row like a pixel sprite.
   const ROWS = [
-    [[2, 5], [21, 25]],
-    [[0, 6], [20, 26]],
-    [[0, 9], [17, 25]],
-    [[2, 12], [14, 24]],
-    [[4, 22]],
-    [[6, 20]],
-    [[8, 19]],
-    [[10, 16]]
+    [[3, 6]],
+    [[2, 8]],
+    [[2, 10], [24, 27]],
+    [[3, 13], [22, 27]],
+    [[4, 16], [20, 26]],
+    [[6, 24]],
+    [[7, 23]],
+    [[9, 21]],
+    [[11, 19]]
   ];
   for (let r = 0; r < ROWS.length; r++)
     for (const run of ROWS[r]) px(x + run[0], y + r * 2, run[1] - run[0], 2, '#ffd83d');
-  px(x - 1, y + 1, 3, 3, '#6d4c2f');   // the stem, in line with the left tip
+  px(x + 25, y + 4, 2, 2, '#6d4c2f');   // the dark tip at the pointed end
+  px(x + 3, y - 2, 4, 3, '#6d4c2f');    // the stem, on top of the other end
 }
 function drawMonkey() {
   const x = player.x - cameraX;
