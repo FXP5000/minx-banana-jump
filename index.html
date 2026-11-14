@@ -24,9 +24,13 @@
   }
   #overlay {
     position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 14px; text-align: center;
+    align-items: center; justify-content: flex-start; gap: 14px; text-align: center;
     background: rgba(10, 30, 14, 0.82); border-radius: 6px; padding: 20px;
+    overflow-y: auto;   /* the shop is TALL (24 skins + 19 hats) — the menu scrolls so everything is reachable */
+    scrollbar-color: #ffd83d rgba(255,255,255,0.12);
   }
+  #overlay > * { flex-shrink: 0; }
+  #ov-btn { position: sticky; bottom: 0; }   /* PLAY stays in reach while scrolling the shop */
   #overlay.hidden { display: none; }
   #overlay h2 { color: #ffd83d; font-size: clamp(22px, 5vw, 40px); text-shadow: 3px 3px 0 #7a4a00; }
   #overlay p { max-width: 560px; line-height: 1.55; font-size: clamp(14px, 2.4vw, 17px); }
@@ -721,7 +725,7 @@ function renderShop() {
 function openMenu() {
   state = 'menu';
   ovTitle.textContent = "🐵 MINX'S MAIN MENU";
-  ovText.innerHTML = 'Pick your monkey and a hat!<br>Collect bananas in the game to fill your <b>Banana Bank</b>.<br>The cooler it looks, the more bananas it costs — the <b>🌈 Rainbow</b> monkey is <b>1000</b>!<br>And check back every day for the <b>🌟 Skin of the Day</b>.';
+  ovText.innerHTML = 'Pick your monkey and a hat! <b>Scroll down</b> — there are lots!<br>Collect bananas in the game to fill your <b>Banana Bank</b>.<br>The cooler it looks, the more bananas it costs — the <b>🌈 Rainbow</b> monkey is <b>1000</b>!<br>And check back every day for the <b>🌟 Skin of the Day</b>.';
   ovBtn.textContent = '▶ PLAY!';
   ovBtn.onclick = newGame;
   document.getElementById('bank-line').style.display = 'block';
