@@ -81,7 +81,14 @@
    A simple, kid-friendly 8-bit platformer.
    Design rules (kept deliberately gentle for young players):
    - One new idea per level: Level 1 = jumping only. Level 2 = vines.
-   - No enemies. The only danger is falling in a gap (Level 2).
+   - Minx jumps gently (about 100px high) — enough for one platform step, no more.
+   - No running underneath to the finish: after the start, Level 1 is water
+     with platforms over it, so the platforms ARE the path. Level 2's water
+     gaps can only be crossed on the vines, which swing slowly and gently.
+   - No enemies. The only danger is splashing into the water: that costs a
+     life and restarts Minx at the START of the level he is in. Losing all
+     lives also restarts him at the start of that same level (never Level 1
+     if he was further on).
    - 3 lives, shown in a clean golden-yellow bar split into 3 sections.
    - Every 3 bananas earns a life back, and the game counts out loud
      on screen (1! 2! 3!) so collecting is a tiny counting lesson.
@@ -129,7 +136,7 @@ addEventListener('keydown', (e) => {
   if ((e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') && !keys.jump) jumpPressed = true;
   keys[e.key.toLowerCase()] = true;
   if (e.key === ' ') keys.jump = true;
-  if (e.key.toLowerCase() === 'r' && state === 'playing') startLevel(levelIndex, true);
+  if (e.key.toLowerCase() === 'r' && state === 'playing') { totalBananas = levelStart.bananas; score = levelStart.score; startLevel(levelIndex, true); }
 });
 addEventListener('keyup', (e) => {
   keys[e.key.toLowerCase()] = false;
@@ -154,32 +161,37 @@ bindTouch('t-jump',  () => { if (!keys.jump) jumpPressed = true; keys.jump = tru
    bananas:   [x, y]
    vines:     [anchorX, anchorY, length]  (Level 2 only)              */
 const GROUND_Y = 384;
+const WATER_Y = 412;              // splash line: feet below this = in the water
 
 const LEVELS = [
   {
     name: 'Level 1 — Little Hops',
-    intro: 'Just jumping! Hop up the platforms and collect bananas. Reach the golden tree!',
-    world: 2600,
-    grounds: [[0, 2600]],                       // no gaps yet — safe for first-time players
-    platforms: [
+    intro: 'Just jumping! Hop from platform to platform over the water. Reach the golden tree!',
+    world: 2660,
+    grounds: [[0, 360]],                        // solid ground ONLY at the start…
+    platforms: [                                // …after that, platforms over water are the only way across
       [150, 338, 96], [292, 292, 96], [434, 246, 96], [576, 292, 96], [718, 338, 96],
-      [910, 288, 96], [1052, 242, 96], [1194, 196, 96], [1336, 242, 96], [1478, 288, 96],
-      [1680, 330, 96], [1822, 276, 96], [1964, 222, 96], [2106, 268, 96], [2248, 314, 96],
+      [860, 292, 96], [1002, 246, 96], [1144, 292, 96], [1286, 338, 96],
+      [1428, 292, 96], [1570, 246, 96], [1712, 292, 96], [1854, 338, 96],
+      [1996, 292, 96], [2138, 246, 96], [2280, 202, 96],
+      [2410, 202, 190],                         // the golden-tree platform (the finish)
     ],
     bananas: [
       [190, 306], [332, 260], [474, 214], [616, 260], [758, 306],
-      [950, 256], [1092, 210], [1234, 164], [1376, 210], [1518, 256],
-      [1720, 298], [1862, 244], [2004, 190], [2146, 236], [2288, 282],
-      [80, 352], [900, 352], [1620, 352],
+      [900, 260], [1042, 214], [1184, 260], [1326, 306],
+      [1468, 260], [1610, 214], [1752, 260], [1894, 306],
+      [2036, 260], [2178, 214], [2320, 170],
+      [80, 352],
     ],
     vines: [],
-    goalX: 2480,
+    goalX: 2460,
+    goalY: 202,                                 // finish counts only UP on the tree platform — never from underneath
   },
   {
     name: 'Level 2 — Vine Swings',
-    intro: 'New idea: vines! Walk into a vine to grab it. Press SPACE to let go and fly!',
+    intro: 'New idea: vines! Jump to grab a vine, swing gently, press SPACE to let go!',
     world: 2800,
-    grounds: [[0, 620], [920, 560], [1780, 1020]],
+    grounds: [[0, 620], [900, 580], [1760, 1040]],   // water gaps between the ground: vines are the only way over (landing edges sit just past each vine's swing reach, so a gentle release still lands safely)
     platforms: [
       [180, 330, 96], [330, 276, 96],
       [1000, 320, 96], [1150, 264, 96], [1300, 320, 96],
@@ -194,10 +206,11 @@ const LEVELS = [
       [90, 352], [1500, 352], [2560, 352],
     ],
     vines: [
-      [770, 60, 240],                   // crosses the gap 620 -> 920
-      [1620, 60, 240],                  // crosses the gap 1480 -> 1780
+      [770, 60, 240],                   // crosses the gap 620 -> 900
+      [1620, 60, 240],                  // crosses the gap 1480 -> 1760
     ],
     goalX: 2660,
+    goalY: GROUND_Y,
   },
 ];
 
@@ -206,6 +219,7 @@ let state = 'title';            // title | playing | levelComplete | gameOver | 
 let levelIndex = 0;
 let level = LEVELS[0];
 let lives = 3, score = 0, totalBananas = 0;
+let levelStart = { bananas: 0, score: 0 };   // totals when the current level began — restored on a level restart, so bananas never double-count
 let cameraX = 0;
 let popups = [];                // floating texts: {x,y,text,t,color}
 let banner = null;              // big centre message: {text, t}
@@ -237,19 +251,31 @@ function startLevel(idx, keepLives) {
 
 function newGame() {
   lives = 3; score = 0; totalBananas = 0;
+  levelStart = { bananas: 0, score: 0 };
   startLevel(0, true);
 }
 
+function restartCurrentLevel() {
+  // Back to the START of the level Minx is in, with that level's bananas
+  // back in place and the totals rewound to when the level began.
+  totalBananas = levelStart.bananas;
+  score = levelStart.score;
+  startLevel(levelIndex, true);
+}
+
 function loseLife() {
+  // Minx splashed into the water.
   lives--;
   sfx.fall();
   if (lives <= 0) {
     state = 'gameOver';
-    showOverlay('GAME OVER', `Minx is out of lives — but every great monkey tries again!<br>You collected <b>${totalBananas} bananas</b> and scored <b>${score}</b>.`, '↻ TRY AGAIN', newGame);
+    showOverlay('GAME OVER',
+      `Minx is out of lives — but every great monkey tries again!<br>He restarts at the start of <b>${level.name}</b> with 3 fresh lives.`,
+      '↻ TRY THIS LEVEL AGAIN',
+      () => { lives = 3; restartCurrentLevel(); });
   } else {
-    player.x = player.safeX; player.y = player.safeY;
-    player.vx = 0; player.vy = 0; player.swinging = null;
-    banner = { text: 'Ouch! ' + lives + (lives === 1 ? ' life' : ' lives') + ' left', sub: '', t: 90 };
+    restartCurrentLevel();
+    banner = { text: '💦 Splash! Back to the start — ' + lives + (lives === 1 ? ' life' : ' lives') + ' left', sub: level.name, t: 120 };
   }
 }
 
@@ -279,7 +305,7 @@ function completeLevel() {
     state = 'levelComplete';
     showOverlay('🎉 ' + level.name + ' done!',
       `Great jumping, Minx!<br>Bananas so far: <b>${totalBananas}</b> &nbsp;•&nbsp; Score: <b>${score}</b><br>Next: vines! Walk into a vine to swing, press SPACE to let go.`,
-      '▶ LEVEL 2', () => startLevel(levelIndex + 1, true));
+      '▶ LEVEL 2', () => { levelStart = { bananas: totalBananas, score: score }; startLevel(levelIndex + 1, true); });
   } else {
     state = 'win';
     showOverlay('🏆 YOU WIN!',
@@ -298,7 +324,7 @@ function showOverlay(title, html, btnLabel, onClick) {
 ovBtn.onclick = newGame;
 
 /* ---------- physics & update ---------- */
-const GRAV = 0.6, MOVE = 3.4, JUMP = -13.2;
+const GRAV = 0.6, MOVE = 3.4, JUMP = -11;   // gentle jump: rises about 100px — one platform step (46–54px), never two
 
 function solids() {
   const list = [];
@@ -317,14 +343,14 @@ function update() {
 
   if (player.swinging) {
     const v = player.swinging;
-    v.t += 0.045;
-    v.angle = Math.sin(v.t) * 0.95;                       // pendulum swing
+    v.t += 0.022;                                         // slow, gentle swing
+    v.angle = Math.sin(v.t) * 0.62;                       // smaller arc — no fast flying
     player.x = v.ax + Math.sin(v.angle) * v.len - player.w / 2;
     player.y = v.ay + Math.cos(v.angle) * v.len;
-    if (jumpPressed) {                                    // let go and fly!
-      const speed = Math.cos(v.t) * 0.95;                 // swing direction
-      player.vx = speed * 9;
-      player.vy = -6.5 - Math.abs(speed) * 2;
+    if (jumpPressed) {                                    // let go — with a soft, gentle push
+      const dxPerFrame = Math.cos(v.angle) * v.len * 0.62 * Math.cos(v.t) * 0.022;
+      player.vx = dxPerFrame * 1.7;
+      player.vy = -3.2;
       player.swinging = null;
       sfx.swing();
     }
@@ -360,18 +386,17 @@ function update() {
       }
     }
 
-    // Grab a vine: walk into its rope while falling/passing near it
+    // Grab a vine: jump toward it over a water gap — a wide, forgiving grab zone for kids.
+    // The vine keeps its own gentle rhythm when grabbed (its phase is NOT reset), so there's no sudden jerk.
     for (const v of vines) {
-      const ropeX = v.ax + Math.sin(v.angle) * v.len * 0.55;
-      if (Math.abs(player.x + player.w / 2 - v.ax) < 26 && player.y > v.ay + 60 && player.y < v.ay + v.len + 10 && player.vy > -2) {
-        player.swinging = v; v.t = Math.PI / 2; sfx.swing();
+      if (Math.abs(player.x + player.w / 2 - v.ax) < 42 && player.y > v.ay + 50 && player.y < v.ay + v.len + 60) {
+        player.swinging = v; sfx.swing();
         popups.push({ x: player.x, y: player.y - 24, text: 'SPACE to let go!', t: 70, color: '#ffffff' });
         break;
       }
-      void ropeX;
     }
 
-    if (player.y > H + 80) { loseLife(); return; }
+    if (player.y + player.h > WATER_Y + 16) { loseLife(); return; }   // splash!
   }
 
   player.animT += Math.abs(player.vx) > 0.5 || player.swinging ? 0.18 : 0.05;
@@ -382,7 +407,10 @@ function update() {
         player.y < b.y + 24 && player.y + player.h > b.y) collectBanana(b);
   }
 
-  if (player.x + player.w >= level.goalX && player.y + player.h > GROUND_Y - 130) completeLevel();
+  // The finish only counts when Minx is standing AT the golden tree (on its platform
+  // in Level 1, on the ground in Level 2) — passing underneath it does nothing.
+  const feet = player.y + player.h;
+  if (player.x + player.w >= level.goalX && feet >= level.goalY - 4 && feet <= level.goalY + 30) completeLevel();
 
   cameraX = Math.max(0, Math.min(player.x - W / 2 + player.w / 2, level.world - W));
 }
@@ -416,6 +444,12 @@ function drawBackground() {
 }
 
 function drawWorld() {
+  // water — fills the bottom wherever there is no ground
+  px(0, WATER_Y, W, H - WATER_Y, '#29b6f6');
+  px(0, WATER_Y, W, 6, '#81d4fa');
+  ctx.fillStyle = '#e1f5fe';
+  const waveOff = Math.floor(Date.now() / 400) % 24;
+  for (let wx = -24 + waveOff; wx < W; wx += 24) ctx.fillRect(wx, WATER_Y + 3, 12, 3);
   // grounds
   for (const g of level.grounds) {
     const sx = g[0] - cameraX; if (sx + g[1] < 0 || sx > W) continue;
@@ -435,7 +469,7 @@ function drawWorld() {
   // vines
   for (const v of vines) {
     const topX = v.ax - cameraX; if (topX < -160 || topX > W + 160) continue;
-    if (!player.swinging || player.swinging !== v) v.angle = Math.sin(Date.now() / 900 + v.ax) * 0.18;
+    if (!player.swinging || player.swinging !== v) v.angle = Math.sin(Date.now() / 1500 + v.ax) * 0.14;
     const endX = topX + Math.sin(v.angle) * v.len;
     const endY = v.ay + Math.cos(v.angle) * v.len;
     ctx.strokeStyle = '#2e7d32'; ctx.lineWidth = 6;
@@ -451,13 +485,13 @@ function drawWorld() {
     const bobY = Math.sin(Date.now() / 300 + b.bob) * 3;
     drawBanana(sx, b.y + bobY);
   }
-  // goal: golden tree
-  const gx = level.goalX - cameraX;
+  // goal: golden tree, rooted at the level's goal height (a platform in Level 1)
+  const gx = level.goalX - cameraX, gy = level.goalY;
   if (gx > -120 && gx < W + 60) {
-    px(gx + 28, GROUND_Y - 130, 18, 130, '#6d4c2f');
-    px(gx, GROUND_Y - 190, 74, 66, '#ffb300');
-    px(gx + 12, GROUND_Y - 208, 50, 22, '#ffd83d');
-    drawBanana(gx + 26, GROUND_Y - 168);
+    px(gx + 28, gy - 92, 18, 92, '#6d4c2f');
+    px(gx, gy - 152, 74, 66, '#ffb300');
+    px(gx + 12, gy - 170, 50, 22, '#ffd83d');
+    drawBanana(gx + 26, gy - 130);
   }
 }
 
