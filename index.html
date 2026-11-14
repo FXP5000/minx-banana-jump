@@ -4,7 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Minx's Banana Jump — an 8-bit jungle game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
+  /* PIXEL LETTERS (Finbar): the words themselves are pixels. Big words use
+     the pixel font; tiny small-print is allowed to stay plain. */
+  h1, #overlay h2, #menu-page h1, .menu-h, .big-btn, .char-btn, #bank-line, .sub {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+  }
+  h1 { font-size: clamp(17px, 4vw, 30px); }
+  .sub { font-size: clamp(9px, 1.8vw, 12px); }
+  #overlay h2 { font-size: clamp(15px, 3.6vw, 26px); line-height: 1.5; }
+  .big-btn { font-size: clamp(12px, 2.4vw, 17px); }
+  .char-btn { font-size: 9px; line-height: 1.5; }
+  #bank-line { font-size: 13px !important; }
+  /* Headings WRAPPED IN VINES (Finbar): a leafy vine strip above and below */
+  .vine { width: min(560px, 88%); height: 16px; margin: 2px auto;
+    background:
+      radial-gradient(ellipse 9px 5px at 12px 9px, #43a047 62%, transparent 63%),
+      radial-gradient(ellipse 9px 5px at 34px 6px, #2e7d32 62%, transparent 63%),
+      radial-gradient(ellipse 9px 5px at 56px 10px, #66bb6a 62%, transparent 63%),
+      linear-gradient(#388e3c, #388e3c);
+    background-size: 68px 16px, 68px 16px, 68px 16px, 100% 3px;
+    background-position: 0 0, 0 0, 0 0, 0 7px;
+    background-repeat: repeat-x, repeat-x, repeat-x, no-repeat;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #17351c;
@@ -40,10 +64,20 @@
     padding: 12px 30px; border-radius: 8px; letter-spacing: 1px;
   }
   .big-btn:active { transform: translateY(3px); border-bottom-width: 2px; }
-  #char-row, #hat-row, #daily-row { justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
-  .char-btn { background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 12px; padding: 6px 6px 3px; cursor: pointer; color: #fff; font-family: inherit; font-size: 12px; }
+  #char-row, #hat-row, #daily-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 4px; max-width: 1060px; }
+  /* Every shop tile is the SAME medium size (Finbar) — no small ones, no big ones. */
+  .char-btn { background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 12px; padding: 8px 4px 6px; cursor: pointer; color: #fff; font-family: inherit; font-size: 12px; width: 118px; height: 136px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; box-sizing: border-box; }
   .char-btn:hover { background: rgba(255,255,255,0.18); }
   .char-btn.sel { border-color: #ffd83d; background: rgba(255,216,61,0.15); }
+  .char-btn div { margin-top: 4px; line-height: 1.3; text-align: center; }
+  /* The main menu page: full-screen, solid black */
+  #menu-page { position: fixed; inset: 0; background: #000; z-index: 60; overflow-y: auto; display: none; flex-direction: column; align-items: center; padding: 26px 14px 44px; gap: 8px; text-align: center; scrollbar-color: #ffd83d #222; }
+  #menu-page.open { display: flex; }
+  #menu-page h1 { color: #ffd83d; font-size: clamp(24px, 5vw, 40px); text-shadow: 3px 3px 0 #7a4a00; margin: 0; }
+  #menu-page .menu-sub { color: #eee; line-height: 1.55; font-size: clamp(13px, 2.2vw, 16px); margin: 4px 0; }
+  #menu-page .menu-h { color: #ffd83d; margin: 16px 0 0; font-size: 18px; letter-spacing: 1px; }
+  #menu-page #bank-line { color: #fff; }
+  #menu-play { position: sticky; bottom: 10px; margin-top: 18px; }
   #touch { display: none; width: min(960px, 100%); justify-content: space-between; margin-top: 10px; gap: 10px; }
   #touch button {
     font-family: inherit; font-size: 26px; flex: 1; padding: 16px 0; border-radius: 10px;
@@ -56,11 +90,13 @@
 </style>
 </head>
 <body>
-  <h1>🍌 MINX'S BANANA JUMP 🐵</h1>
+  <div class="vine"></div>
+  <h1>MINX'S BANANA JUMP</h1>
+  <div class="vine"></div>
   <div class="sub">An 8-bit jungle game — jump and collect!</div>
 
   <div id="wrap">
-    <canvas id="game" width="800" height="450"></canvas>
+    <canvas id="game" width="400" height="225"></canvas>
     <div id="overlay">
       <h2 id="ov-title">MINX'S BANANA JUMP</h2>
       <p id="ov-text">Help Minx the monkey collect bananas!<br>
@@ -68,14 +104,29 @@
       The screen follows him forwards — but it never scrolls back, so there's no going back to the start!<br>
       Level 1 is just jumping. Level 2 adds swinging vines. Level 3 is the Tunnel Tree.<br>
       Every <b>3 bananas = 1 extra life</b>. Count along: 1, 2, 3!<br>
-      Beat all three levels to unlock the <b>🌴 Endless Level</b> — how high can you score?</p>
-      <div id="bank-line" style="display:none; font-size:19px; margin-top:10px;">🍌 Bank: <b id="bank-n">0</b> bananas</div>
-      <div id="char-row" style="display:none"></div>
-      <div id="daily-label" style="display:none; font-size:15px; margin-top:8px;">🌟 SKIN OF THE DAY — a different one tomorrow!</div>
-      <div id="daily-row" style="display:none"></div>
-      <div id="hat-row" style="display:none"></div>
+      Beat all three levels to unlock the <b>Endless Level</b> — how high can you score?</p>
       <button class="big-btn" id="ov-btn">▶ START</button>
     </div>
+  </div>
+
+  <!-- The MAIN MENU is its own full page (Finbar): solid black background,
+       everything laid out in neat rows of same-size tiles. -->
+  <div id="menu-page">
+    <div class="vine"></div>
+    <h1>MINX'S MAIN MENU</h1>
+    <div class="vine"></div>
+    <p class="menu-sub">Pick your monkey and a hat! Everything is in rows — scroll the page to see them all.<br>
+    Collect bananas in the game to fill your <b>Banana Bank</b>.<br>
+    The cooler it looks, the more bananas it costs — the <b>Rainbow</b> monkey is <b>1000</b>!<br>
+    And check back every day for the <b>Skin of the Day</b>.</p>
+    <div id="bank-line" style="font-size:19px;">Banana Bank: <b id="bank-n">0</b> bananas</div>
+    <h3 class="menu-h">MONKEYS</h3>
+    <div id="char-row"></div>
+    <h3 class="menu-h">SKIN OF THE DAY — a different one tomorrow!</h3>
+    <div id="daily-row"></div>
+    <h3 class="menu-h">HATS &amp; ACCESSORIES</h3>
+    <div id="hat-row"></div>
+    <button class="big-btn" id="menu-play">▶ PLAY!</button>
   </div>
 
   <div id="touch">
@@ -88,7 +139,7 @@
     Move: <kbd>◀</kbd> <kbd>▶</kbd> (or <kbd>A</kbd> / <kbd>D</kbd>) &nbsp;•&nbsp;
     Jump / let go of a vine: <kbd>SPACE</kbd> (or click / tap) &nbsp;•&nbsp;
     Grab a vine: jump toward it &nbsp;•&nbsp; Restart level: <kbd>R</kbd><br>
-    <button id="menu-btn" class="big-btn" style="font-size:15px; padding:8px 18px; margin-top:6px;">🐵 Change Monkey</button>
+    <button id="menu-btn" class="big-btn" style="font-size:15px; padding:8px 18px; margin-top:6px;">Change Monkey</button>
   </div>
 
 <script>
@@ -123,6 +174,10 @@
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+// EVERYTHING is pixelated (Finbar): the game renders at HALF resolution
+// (400x225) and the page stretches it up with image-rendering: pixelated,
+// so every tree, vine, word and monkey comes out in chunky pixels.
+ctx.scale(0.5, 0.5);
 const W = canvas.width, H = canvas.height;
 ctx.imageSmoothingEnabled = false;
 
@@ -196,100 +251,103 @@ const WATER_Y = 412;              // splash line: feet below this = in the water
 
 const LEVELS = [
   {
-    name: 'Level 1 — Little Hops',
-    intro: 'Move Minx with ◀ ▶ — jump with SPACE from platform to platform over the water!',
-    world: 3160,
+    name: 'LEVEL 1 — JUMPING PRACTICE',
+    intro: 'Jumping practice! Move Minx with ◀ ▶ — jump with SPACE from platform to platform over the water!',
+    world: 3080,
     grounds: [[0, 420]],                        // solid ground ONLY at the start…
     platforms: [                                // …after that, platforms over the creek are the only way across.
-      // HARDER (Finbar): wider 102px gaps and bigger 56–70px steps up — still
-      // comfortably inside Minx's ~126px jump distance and ~100px jump height.
-      [502, 338, 180], [784, 282, 180], [1066, 338, 180], [1348, 268, 180],
-      [1630, 324, 180], [1912, 254, 180], [2194, 310, 180], [2476, 240, 180],
-      [2758, 240, 220],                         // the golden-tree platform (the finish)
+      // MEDIUM mode (Finbar): 92px gaps and 56px steps — halfway between the
+      // original easy (82/42) and hard (102/70). Comfortably jumpable.
+      [502, 338, 180], [774, 282, 180], [1046, 338, 180], [1318, 282, 180],
+      [1590, 338, 180], [1862, 282, 180], [2134, 338, 180], [2406, 282, 180],
+      [2678, 282, 220],                         // the golden-tree platform (the finish)
     ],
     bananas: [
-      [581, 306], [863, 250], [1145, 306], [1427, 236], [1709, 292],
-      [1991, 222], [2273, 278], [2555, 208], [2837, 208],
+      [581, 306], [853, 250], [1125, 306], [1397, 250], [1669, 306],
+      [1941, 250], [2213, 306], [2485, 250], [2757, 250],
       [90, 352],
     ],
     vines: [],
-    goalX: 2818,
-    goalY: 240,                                 // finish counts only UP on the tree platform — never from underneath
+    gates: [[300, 384], [853, 282]],            // obstacles to jump over: one on the start ground, one on a platform
+    goalX: 2738,
+    goalY: 282,                                 // finish counts only UP on the tree platform — never from underneath
   },
   {
-    name: 'Level 2 — Vine Swings',
-    intro: 'Jump to grab a vine, swing gently, SPACE again to let go!',
-    world: 4370,
+    name: 'LEVEL 2 — VINE PRACTICE',
+    intro: 'Vine practice! Jump to grab a vine, swing gently, SPACE again to let go!',
+    world: 4300,
     grounds: [[0, 420]],                        // like Level 1: solid ground ONLY at the start…
     platforms: [                                // …then platform clusters over the creek, linked by LONG vines — no running underneath, ever.
-      // HARDER (Finbar): same 102px gaps / up-to-70px steps as Level 1, and
-      // longer vine crossings. All audited jumpable / swingable.
+      // MEDIUM mode (Finbar): 92px gaps / 56px steps, vine crossings a touch
+      // longer than easy. All audited jumpable / swingable.
       // cluster A
-      [502, 338, 180], [784, 282, 180], [1066, 338, 180],
+      [502, 338, 180], [774, 282, 180], [1046, 338, 180],
       // (vine 1 crosses from here — it reaches all the way to the landing platform)
-      [1580, 338, 190],
+      [1540, 338, 190],
       // cluster B
-      [1872, 282, 180], [2154, 338, 180], [2436, 268, 180],
+      [1832, 282, 180], [2104, 338, 180], [2376, 282, 180],
       // (vine 2 crosses from here)
-      [2950, 338, 190],
+      [2890, 338, 190],
       // cluster C, climbing to the tree
-      [3242, 282, 180], [3524, 338, 180], [3806, 268, 180],
-      [4088, 268, 220],                         // the golden-tree platform (the finish)
+      [3182, 282, 180], [3454, 338, 180], [3726, 282, 180],
+      [3998, 282, 220],                         // the golden-tree platform (the finish)
     ],
     bananas: [
-      [581, 306], [863, 250], [1145, 306],
-      [1390, 318],                      // mid-swing prize on the first vine
-      [1655, 306],
-      [1951, 250], [2233, 306], [2515, 236],
-      [2760, 318],                      // mid-swing prize on the second vine
-      [3025, 306],
-      [3321, 250], [3603, 306], [3885, 236],
-      [4167, 236],
+      [581, 306], [853, 250], [1125, 306],
+      [1370, 318],                      // mid-swing prize on the first vine
+      [1625, 306],
+      [1911, 250], [2183, 306], [2455, 250],
+      [2700, 318],                      // mid-swing prize on the second vine
+      [2975, 306],
+      [3261, 250], [3533, 306], [3805, 250],
+      [4077, 250],
       [90, 352],
     ],
     vines: [
-      [1400, 60, 260],                  // cluster A (ends x=1246) -> landing platform at x=1580: the swing reaches right over it
-      [2770, 60, 260],                  // cluster B (ends x=2616) -> landing platform at x=2950: the swing reaches right over it
+      [1380, 60, 260],                  // cluster A (ends x=1226) -> landing platform at x=1540: the swing reaches right over it
+      [2710, 60, 260],                  // cluster B (ends x=2556) -> landing platform at x=2890: the swing reaches right over it
     ],
-    goalX: 4148,
-    goalY: 268,                                 // finish counts only UP on the tree platform — never from underneath
+    gates: [[2170, 338], [3520, 338]],          // gates standing on platforms — jump over them!
+    goalX: 4058,
+    goalY: 282,                                 // finish counts only UP on the tree platform — never from underneath
   },
   {
     // LEVEL 3 teaches TIMING: when to jump and when NOT to jump.
     // Minx runs through a tunnel carved into a giant tree. The tunnel floor
     // has gaps (jump those!) — but thick roots hang from the tunnel roof,
     // and jumping under one bonks his head (don't jump there!).
-    name: '🌳 LEVEL 3 — TUNNEL TREE',
-    intro: 'Run through the tree tunnel! Jump the gaps — but DON\'T jump under the hanging roots!',
-    world: 4300,
+    name: 'LEVEL 3 — TUNNEL PRACTICE',
+    intro: 'Tunnel practice! Run through the tree tunnel! Jump the gaps — but DON\'T jump under the hanging roots!',
+    world: 4270,
     trunks: [[560, 2960]],                      // the giant tree: tunnel entrance x=560, exit x=2960
     grounds: [                                  // solid floor, with two gaps inside the tunnel
       [0, 560],                                 // outside, up to the tunnel entrance
       [560, 640],                               // tunnel floor A (560–1200)
-      [1304, 640],                              // tunnel floor B (1304–1944) — a 104px gap to jump (HARDER)
-      [2048, 912],                              // tunnel floor C (2048–2960) — another 104px gap, then the exit
+      [1300, 644],                              // tunnel floor B (1300–1944) — a 100px gap to jump (MEDIUM)
+      [2044, 916],                              // tunnel floor C (2044–2960) — another 100px gap, then the exit
     ],
     ceilings: [                                 // [x, width, underside y] — jumping into these = BONK
       [560, 2400, 232],                         // the tunnel roof itself (high enough to jump the gaps under it)
       [800, 110, 296], [1560, 110, 296],        // hanging roots: run under, DON'T jump
       [2300, 110, 296], [2680, 110, 296],
     ],
-    platforms: [                                // after the exit, climb the outside of the tree (HARDER: 102px gaps, 70px steps)
-      [3050, 324, 180], [3332, 254, 180], [3614, 310, 180],
-      [3896, 240, 220],                         // up in the branches: the golden-tree platform (the finish)
+    platforms: [                                // after the exit, climb the outside of the tree (MEDIUM: 92px gaps, 56px steps)
+      [3050, 330, 180], [3322, 274, 180], [3594, 330, 180],
+      [3866, 274, 220],                         // up in the branches: the golden-tree platform (the finish)
     ],
     bananas: [
       [700, 344], [843, 344], [1050, 344],      // along floor A (843 is under a root — grab it WITHOUT jumping)
-      [1241, 338],                              // over the first floor gap — jump for it!
+      [1239, 338],                              // over the first floor gap — jump for it!
       [1450, 344], [1603, 344],                 // floor B (1603 is under a root)
-      [1985, 338],                              // over the second gap
+      [1983, 338],                              // over the second gap
       [2150, 344], [2343, 344], [2500, 344], [2723, 344],   // floor C (2343 & 2723 under roots)
-      [3128, 292], [3411, 222], [3693, 278], [3975, 208],   // the climb out
+      [3129, 298], [3401, 242], [3673, 298], [3945, 242],   // the climb out
       [90, 352],
     ],
     vines: [],
-    goalX: 3956,
-    goalY: 240,
+    gates: [[300, 384], [1000, 384], [2560, 384]],   // gates: on the start ground, in the tunnel (floor A), and on floor C — jump over!
+    goalX: 3926,
+    goalY: 274,
   },
 ];
 
@@ -322,6 +380,7 @@ const player = {
 
 let bananasLeft = [];
 let vines = [];
+let gateList = [];   // gate/wall obstacles [ {x, surfY} ] — Minx must jump OVER them
 let particles = [];             // little sparkles for bananas, droplets for splashes
 
 function spawnParticles(x, y, color, n, spread, up) {
@@ -340,6 +399,7 @@ function startLevel(idx, keepLives) {
   if (!keepLives) { /* new game resets handled by caller */ }
   bananasLeft = level.bananas.map(b => ({ x: b[0], y: b[1], taken: false, bob: Math.random() * 6.28 }));
   vines = level.vines.map(v => ({ ax: v[0], ay: v[1], len: v[2], angle: 0, t: Math.random() * 6.28 }));
+  gateList = (level.gates || []).map(g => ({ x: g[0], surfY: g[1] }));
   player.x = 40; player.y = GROUND_Y - player.h;
   player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
   player.safeX = 40; player.safeY = player.y;
@@ -348,6 +408,7 @@ function startLevel(idx, keepLives) {
   banner = { text: level.name, sub: level.intro, t: 110 };
   state = 'playing';
   overlay.classList.add('hidden');
+  document.getElementById('menu-page').classList.remove('open');
   // IMPORTANT for the jump button: after START is clicked, the button keeps
   // keyboard focus, and a focused button treats SPACE as a click — which
   // would restart the game instead of jumping / letting go of a vine.
@@ -381,15 +442,15 @@ function loseLife() {
     // on (not the very start); the run only ends when his lives run out.
     if (lives <= 0) {
       state = 'gameOver';
-      showOverlay('🏁 RUN OVER!',
-        `What a run!<br>🏆 Your score: <b>${endlessScore()}</b> &nbsp;•&nbsp; Best: <b>${endlessBest}</b><br>Bananas this run: <b>${runBananas}</b> &nbsp;•&nbsp; Distance: <b>${Math.floor(player.x / 50)}m</b>`,
+      showOverlay('RUN OVER!',
+        `What a run!<br>Your score: <b>${endlessScore()}</b> &nbsp;•&nbsp; Best: <b>${endlessBest}</b><br>Bananas this run: <b>${runBananas}</b> &nbsp;•&nbsp; Distance: <b>${Math.floor(player.x / 50)}m</b>`,
         '↻ RUN AGAIN', () => startEndless());
     } else {
       player.x = player.safeX; player.y = player.safeY;
       player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
       cameraX = Math.max(0, player.safeX - 160);   // the one time the camera steps back: putting Minx back on his checkpoint platform after a splash
       startTimer = 40;
-      banner = { text: '💦 Splash! ' + lives + (lives === 1 ? ' life' : ' lives') + ' left', sub: 'Back to the last platform — keep going!', t: 110 };
+      banner = { text: 'Splash! ' + lives + (lives === 1 ? ' life' : ' lives') + ' left', sub: 'Back to the last platform — keep going!', t: 110 };
     }
     return;
   }
@@ -401,7 +462,7 @@ function loseLife() {
       () => { lives = 3; restartCurrentLevel(); });
   } else {
     restartCurrentLevel();
-    banner = { text: '💦 Splash! Back to the start — ' + lives + (lives === 1 ? ' life' : ' lives') + ' left', sub: level.name, t: 120 };
+    banner = { text: 'Splash! Back to the start — ' + lives + (lives === 1 ? ' life' : ' lives') + ' left', sub: level.name, t: 120 };
   }
 }
 
@@ -419,11 +480,11 @@ function collectBanana(b) {
   if (countInThree === 3) {
     if (lives < 3) {
       lives++;
-      popups.push({ x: player.x, y: player.y - 30, text: '3 bananas! +1 LIFE ❤', t: 100, color: '#ff8a80' });
+      popups.push({ x: player.x, y: player.y - 30, text: '3 bananas! +1 LIFE', t: 100, color: '#ff8a80' });
       sfx.life();
     } else {
       score += 30;
-      popups.push({ x: player.x, y: player.y - 30, text: '3 bananas! +30 points ⭐', t: 100, color: '#ffd83d' });
+      popups.push({ x: player.x, y: player.y - 30, text: '3 bananas! +30 points', t: 100, color: '#ffd83d' });
       sfx.life();
     }
   }
@@ -437,14 +498,14 @@ function completeLevel() {
       'Next: vines! Jump to grab one, swing gently, press SPACE to let go.',
       'Next: the Tunnel Tree! Jump the gaps in the tunnel floor — but DON\'T jump under the hanging roots, or BONK!',
     ];
-    showOverlay('🎉 ' + level.name + ' done!',
+    showOverlay(level.name + ' done!',
       `Great jumping, Minx!<br>Bananas so far: <b>${totalBananas}</b> &nbsp;•&nbsp; Score: <b>${score}</b><br>${nextTips[levelIndex] || ''}`,
       '▶ LEVEL ' + (levelIndex + 2), () => { levelStart = { bananas: totalBananas, score: score }; startLevel(levelIndex + 1, true); });
   } else {
     state = 'win';
-    showOverlay('🏆 YOU WIN!',
+    showOverlay('YOU WIN!',
       `Minx made it through the whole jungle!<br>You collected <b>${totalBananas} bananas</b> and scored <b>${score}</b>.<br>🆕 <b>Unlocked: the Endless Level!</b> No finish line — run as far as you can and chase the high score!`,
-      '🌴 PLAY THE ENDLESS LEVEL', () => startEndless());
+      'PLAY THE ENDLESS LEVEL', () => startEndless());
   }
 }
 
@@ -452,6 +513,7 @@ function completeLevel() {
 function endlessPlatform(x, y, w) {
   level.platforms.push([x, y, w]);
   bananasLeft.push({ x: x + w / 2 - 11, y: y - 32, taken: false, bob: Math.random() * 6.28 });
+  if (Math.random() < 0.3) gateList.push({ x: x + w / 2 - 9, surfY: y });   // some platforms have a gate to jump over
   genLast = { x, y, w };
 }
 
@@ -464,8 +526,8 @@ function genTunnel() {
   // A whole Tunnel Tree section, generated like Level 3: tunnel floor with
   // one gap to jump, a roof, and two hanging roots not to jump under.
   // The floor gap widens a little the farther the run has gone.
-  const d = Math.min(1, genLast.x / 24000);
-  const gapW = 96 + Math.round(14 * d);                       // 96px early, 110px deep in a run
+  const d = Math.min(1, genLast.x / 36000);
+  const gapW = 96 + Math.round(8 * d);                        // MEDIUM ramp: 96px early, 104px deep in a run
   const startX = genLast.x + genLast.w;         // floor starts right where the last surface ends (Minx drops/runs straight in)
   const LEN = 1500;
   level.grounds.push([startX, 700], [startX + 700 + gapW, LEN - 700 - gapW]);
@@ -473,6 +535,7 @@ function genTunnel() {
   level.ceilings.push([startX - 40, LEN + 80, 232], [startX + 260, 110, 296], [startX + 950, 110, 296]);
   for (const bx of [150, 304, 994, 1300]) bananasLeft.push({ x: startX + bx, y: 344, taken: false, bob: Math.random() * 6.28 });   // 304 & 994 sit under the roots — run, don't jump!
   bananasLeft.push({ x: startX + 700 + gapW / 2 - 11, y: 338, taken: false, bob: Math.random() * 6.28 });   // over the tunnel floor gap
+  if (Math.random() < 0.5) gateList.push({ x: startX + 520, surfY: GROUND_Y });   // sometimes a gate on the tunnel floor (clear of the roots)
   genLast = { x: startX + LEN, y: GROUND_Y, w: 0 };
 }
 
@@ -480,19 +543,19 @@ function genNext() {
   const last = genLast;
   const kind = GEN_PLAN[genIdx % GEN_PLAN.length]; genIdx++;
   if (kind === 'T') { genTunnel(); return; }
-  // DIFFICULTY RAMP (Finbar): the farther the run goes, the harder it gets —
-  // wider gaps, bigger steps, slightly narrower platforms, longer vine
-  // crossings — but always inside what Minx's jump can actually do.
-  const d = Math.min(1, last.x / 24000);         // 0 at the start, full at ~480m
+  // MEDIUM DIFFICULTY RAMP (Finbar): the farther the run goes, the harder
+  // it gets — but gently: wider gaps, bigger steps, longer vine crossings,
+  // always inside what Minx's jump can actually do.
+  const d = Math.min(1, last.x / 36000);         // 0 at the start, full at ~720m
   if (kind === 'V') {
-    // a vine gap: swing across to a landing platform (the crossing grows)
-    vines.push({ ax: last.x + last.w + 140 + Math.round(20 * d), ay: 60, len: 260, angle: 0, t: Math.random() * 6.28 });
-    endlessPlatform(last.x + last.w + 280 + Math.round(60 * d), 340, d > 0.6 ? 175 : 190);
+    // a vine gap: swing across to a landing platform (the crossing grows a bit)
+    vines.push({ ax: last.x + last.w + 140 + Math.round(10 * d), ay: 60, len: 260, angle: 0, t: Math.random() * 6.28 });
+    endlessPlatform(last.x + last.w + 280 + Math.round(30 * d), 340, 190);
   } else {
-    const steps = d < 0.35 ? [-42, 0, 42, 0] : d < 0.7 ? [-56, -42, 0, 42, 56, 0] : [-70, -56, -42, 0, 42, 56, 70, 0];
+    const steps = d < 0.4 ? [-42, 0, 42, 0] : [-56, -42, 0, 42, 56, 0];
     const dy = steps[Math.floor(Math.random() * steps.length)];
     const y = Math.max(202, Math.min(338, last.y + dy));
-    endlessPlatform(last.x + last.w + 82 + Math.round(36 * d), y, d > 0.6 ? 165 : 180);   // gaps grow 82px -> 118px
+    endlessPlatform(last.x + last.w + 82 + Math.round(18 * d), y, 180);   // gaps grow 82px -> 100px
   }
 }
 
@@ -506,14 +569,15 @@ function ensureEndless() {
     level.trunks = level.trunks.filter(t => t[1] > cameraX - 400);
     bananasLeft = bananasLeft.filter(b => b.x > cameraX - 400);
     vines = vines.filter(v => v.ax > cameraX - 500);
+    gateList = gateList.filter(g => g.x > cameraX - 400);
   }
 }
 
 function startEndless() {
   levelIndex = 3;
-  level = { name: '🌴 LEVEL 4 — ENDLESS RUN', intro: 'No finish line — platforms, vines AND tree tunnels, all mixed together. And it gets HARDER the farther you go!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], ceilings: [], trunks: [], goalX: Infinity, goalY: -9999, endless: true };
+  level = { name: 'LEVEL 4 — ENDLESS RUN', intro: 'No finish line — platforms, vines AND tree tunnels, all mixed together. And it gets trickier the farther you go!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], ceilings: [], trunks: [], goalX: Infinity, goalY: -9999, endless: true };
   lives = 3; runBananas = 0; bestBeatenShown = false;
-  bananasLeft = []; vines = []; particles = [];
+  bananasLeft = []; vines = []; particles = []; gateList = [];
   player.x = 40; player.y = GROUND_Y - player.h;
   player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
   player.safeX = 40; player.safeY = player.y;
@@ -532,11 +596,6 @@ function showOverlay(title, html, btnLabel, onClick) {
   ovText.innerHTML = html;
   ovBtn.textContent = btnLabel;
   ovBtn.onclick = onClick;
-  document.getElementById('bank-line').style.display = 'none';   // shop rows only show in the main menu
-  document.getElementById('char-row').style.display = 'none';
-  document.getElementById('daily-label').style.display = 'none';
-  document.getElementById('daily-row').style.display = 'none';
-  document.getElementById('hat-row').style.display = 'none';
   overlay.classList.remove('hidden');
 }
 ovBtn.onclick = openMenu;
@@ -554,8 +613,8 @@ const CHARACTERS = [
   { name: 'Green',   fur: '#43a047', dark: '#2e7d32', price: 15 },
   { name: 'Blue',    fur: '#1e88e5', dark: '#1565c0', price: 20 },
   { name: 'Purple',  fur: '#8e24aa', dark: '#6a1b9a', price: 20 },
-  { name: '⭐ GOLDEN', fur: '#ffd83d', dark: '#d4a017', price: 300, rare: true },
-  { name: '🌌 VOID',   fur: '#372b4d', dark: '#1d1830', price: 500, rare: true, eyes: '#b388ff' },
+  { name: 'GOLDEN', fur: '#ffd83d', dark: '#d4a017', price: 300, rare: true },
+  { name: 'VOID',   fur: '#372b4d', dark: '#1d1830', price: 500, rare: true, eyes: '#b388ff' },
   // More skins (appended — indices never move, so saved collections stay valid).
   // Prices climb steeply (Finbar): the cooler it looks, the more bananas it costs.
   { name: 'Pink',    fur: '#f48fb1', dark: '#c2185b', price: 25 },
@@ -563,21 +622,22 @@ const CHARACTERS = [
   { name: 'Lime',    fur: '#9ccc65', dark: '#689f38', price: 30 },
   { name: 'Snow',    fur: '#eceff1', dark: '#b0bec5', price: 40, eyes: '#37474f' },
   { name: 'Midnight', fur: '#37474f', dark: '#102027', price: 40, eyes: '#ffd83d' },
-  { name: '💎 DIAMOND', fur: '#b9f2ff', dark: '#4fb3bf', price: 750, rare: true, eyes: '#0d47a1' },
-  { name: '🌈 RAINBOW', fur: '#e53935', dark: '#8e24aa', price: 1000, rare: true, rainbow: true },
-  { name: '🤖 ROBOT', fur: '#b0bec5', dark: '#607d8b', price: 600, rare: true, robot: true, eyes: '#ff1744' },
+  { name: 'DIAMOND', fur: '#b9f2ff', dark: '#4fb3bf', price: 750, rare: true, eyes: '#0d47a1' },
+  { name: 'RAINBOW', fur: '#e53935', dark: '#8e24aa', price: 1000, rare: true, rainbow: true },
+  { name: 'ROBOT', fur: '#b0bec5', dark: '#607d8b', price: 600, rare: true, robot: true, eyes: '#ff1744' },
+  { name: 'HAZMAT', fur: '#ffee58', dark: '#f9a825', price: 800, rare: true, hazmat: true, eyes: '#37474f' },   // bright yellow hazmat suit + gas mask — pricey!
 ];
 // SKIN OF THE DAY: one special skin is in the shop each day, on rotation —
 // a different one tomorrow! (Once bought, it's yours forever and joins the
 // main grid.) Indices continue after CHARACTERS so saves stay consistent.
 const DAILY_SKINS = [
-  { name: '🌅 Sunset',   fur: '#ff7043', dark: '#d84315', price: 120, daily: true },
-  { name: '🍬 Bubblegum', fur: '#f06292', dark: '#ad1457', price: 120, daily: true },
-  { name: '🌿 Mint',      fur: '#4db6ac', dark: '#00796b', price: 120, daily: true },
-  { name: '💜 Lavender',  fur: '#9575cd', dark: '#5e35b1', price: 120, daily: true },
-  { name: '🪸 Coral',     fur: '#ff8a65', dark: '#e64a19', price: 120, daily: true },
-  { name: '❄️ Frost',     fur: '#90caf9', dark: '#1976d2', price: 120, daily: true },
-  { name: '🍯 Honey',     fur: '#ffca28', dark: '#ff8f00', price: 120, daily: true },
+  { name: 'Sunset',   fur: '#ff7043', dark: '#d84315', price: 120, daily: true },
+  { name: 'Bubblegum', fur: '#f06292', dark: '#ad1457', price: 120, daily: true },
+  { name: 'Mint',      fur: '#4db6ac', dark: '#00796b', price: 120, daily: true },
+  { name: 'Lavender',  fur: '#9575cd', dark: '#5e35b1', price: 120, daily: true },
+  { name: 'Coral',     fur: '#ff8a65', dark: '#e64a19', price: 120, daily: true },
+  { name: 'Frost',     fur: '#90caf9', dark: '#1976d2', price: 120, daily: true },
+  { name: 'Honey',     fur: '#ffca28', dark: '#ff8f00', price: 120, daily: true },
 ];
 const ALL_SKINS = CHARACTERS.concat(DAILY_SKINS);
 function todaysSkinIndex() {
@@ -602,10 +662,10 @@ const HATS = [
   { id: 'chef',   name: 'Chef Hat',   price: 85 },
   { id: 'pirate', name: 'Pirate Hat', price: 90 },
   { id: 'tophat', name: 'Top Hat',    price: 150 },
-  { id: 'crown',  name: '👑 Crown',   price: 250 },
-  { id: 'wizard', name: '🧙 Wizard Hat', price: 300 },
-  { id: 'helmet', name: '🛡️ Knight Helmet', price: 350 },
-  { id: 'halo',   name: '😇 Halo',    price: 400 },
+  { id: 'crown',  name: 'Crown',   price: 250 },
+  { id: 'wizard', name: 'Wizard Hat', price: 300 },
+  { id: 'helmet', name: 'Knight Helmet', price: 350 },
+  { id: 'halo',   name: 'Halo',    price: 400 },
 ];
 function store(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } }
 function save(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
@@ -651,25 +711,35 @@ function drawHatOn(P, ox, oy, hat) {
 // monkey exactly (same proportions as drawMonkey's standing pose) — so the
 // face, mouth and hats line up the same everywhere. (Finbar spotted that
 // the old previews had floating eyes, no mouths, and off-centre hats.)
+const RAINBOW = ['#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa'];
 function drawMonkeyFigure(P, ox, oy, pal, hat) {
   const tan = '#d7a679', eye = pal.eyes || '#212121';
   P(ox - 4, oy + 20, 8, 5, pal.dark);                       // tail
   P(ox + 6, oy + 32, 9, 8, pal.dark); P(ox + 20, oy + 32, 9, 8, pal.dark);   // legs
-  P(ox + 5, oy + 14, 24, 20, pal.fur);                      // body
+  if (pal.rainbow) {                                        // PROPER rainbow: stripes!
+    for (let i = 0; i < 5; i++) P(ox + 5, oy + 14 + i * 4, 24, 4, RAINBOW[i]);
+  } else P(ox + 5, oy + 14, 24, 20, pal.fur);               // body
   P(ox + 11, oy + 18, 12, 13, tan);                         // belly
   P(ox, oy + 16, 6, 14, pal.dark); P(ox + 28, oy + 16, 6, 14, pal.dark);     // arms
-  P(ox + 1, oy + 4, 6, 9, pal.fur); P(ox + 27, oy + 4, 6, 9, pal.fur);       // ears
-  P(ox + 6, oy, 22, 18, pal.fur);                           // head
+  P(ox + 1, oy + 4, 6, 9, pal.rainbow ? RAINBOW[0] : pal.fur); P(ox + 27, oy + 4, 6, 9, pal.rainbow ? RAINBOW[5] : pal.fur);   // ears
+  if (pal.rainbow) {
+    for (let i = 0; i < 5; i++) P(ox + 6, oy + i * 4, 22, Math.min(4, 18 - i * 4), RAINBOW[(i + 2) % 6]);
+  } else P(ox + 6, oy, 22, 18, pal.fur);                    // head
   P(ox + 10, oy + 8, 14, 10, tan);                          // face
   P(ox + 12, oy + 5, 3, 3, eye); P(ox + 20, oy + 5, 3, 3, eye);              // eyes (on the face!)
   P(ox + 15, oy + 13, 5, 2, '#212121');                     // mouth — every monkey has one
   if (pal.robot) { P(ox + 16, oy - 6, 2, 6, pal.dark); P(ox + 14, oy - 10, 6, 5, '#ff1744'); }   // robot antenna
+  if (pal.hazmat) {   // gas mask: goggle band over the eyes + mask with a round filter
+    P(ox + 9, oy + 5, 16, 6, '#37474f');
+    P(ox + 11, oy + 6, 4, 4, '#b3e5fc'); P(ox + 19, oy + 6, 4, 4, '#b3e5fc');
+    P(ox + 11, oy + 11, 12, 7, '#90a4ae');
+    P(ox + 15, oy + 13, 4, 4, '#546e7a');
+  }
   drawHatOn(P, ox, oy, hat);
 }
 function drawMonkeyPreview(c2, pal, hat) {
   const P = (x, y, w, h, c) => { c2.fillStyle = c; c2.fillRect(x, y, w, h); };
-  if (pal.rainbow) pal = { fur: '#ff9800', dark: '#7b1fa2', eyes: pal.eyes };   // static stand-in colour for the ever-changing rainbow monkey
-  drawMonkeyFigure(P, 10, 22, pal, hat);
+  drawMonkeyFigure(P, 10, 22, pal, hat);   // rainbow previews show the stripes too
 }
 function drawHatPreview(c2, hat) {
   const P = (x, y, w, h, c) => { c2.fillStyle = c; c2.fillRect(x, y, w, h); };
@@ -682,7 +752,7 @@ function shopButton(label, price, owned, selected, previewFn, onPick) {
   previewFn(cv.getContext('2d'));
   b.appendChild(cv);
   const d = document.createElement('div');
-  d.textContent = label + (selected ? ' ✔' : owned ? '' : ' — 🍌' + price);
+  d.innerHTML = label + '<br>' + (selected ? 'SELECTED' : owned ? 'OWNED' : price + ' bananas');
   b.appendChild(d);
   b.addEventListener('click', onPick);
   return b;
@@ -723,29 +793,26 @@ function renderShop() {
   });
 }
 function openMenu() {
+  // The main menu is its own full page now: solid black, everything in rows.
   state = 'menu';
-  ovTitle.textContent = "🐵 MINX'S MAIN MENU";
-  ovText.innerHTML = 'Pick your monkey and a hat! <b>Scroll down</b> — there are lots!<br>Collect bananas in the game to fill your <b>Banana Bank</b>.<br>The cooler it looks, the more bananas it costs — the <b>🌈 Rainbow</b> monkey is <b>1000</b>!<br>And check back every day for the <b>🌟 Skin of the Day</b>.';
-  ovBtn.textContent = '▶ PLAY!';
-  ovBtn.onclick = newGame;
-  document.getElementById('bank-line').style.display = 'block';
-  document.getElementById('char-row').style.display = 'flex';
-  document.getElementById('daily-label').style.display = 'block';
-  document.getElementById('daily-row').style.display = 'flex';
-  document.getElementById('hat-row').style.display = 'flex';
-  overlay.classList.remove('hidden');
+  overlay.classList.add('hidden');
+  document.getElementById('menu-page').classList.add('open');
   renderShop();
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
+function closeMenu() { document.getElementById('menu-page').classList.remove('open'); }
 document.getElementById('menu-btn').addEventListener('click', openMenu);
+document.getElementById('menu-play').addEventListener('click', () => { closeMenu(); newGame(); });
 
 /* ---------- physics & update ---------- */
 const GRAV = 0.6, MOVE = 3.4, JUMP = -11;   // Minx's ORIGINAL speed — now truly constant thanks to the fixed 60-steps-per-second loop below; the game is made easier by wide, spread-out platforms with smaller height steps
 
+const GATE_W = 18, GATE_H = 46;
 function solids() {
   const list = [];
   for (const g of level.grounds) list.push({ x: g[0], y: GROUND_Y, w: g[1], ground: true });
   for (const p of level.platforms) list.push({ x: p[0], y: p[1], w: p[2], ground: false });
+  for (const g of gateList) list.push({ x: g.x, y: g.surfY - GATE_H, w: GATE_W, ground: false });   // Minx can also land on TOP of a gate
   return list;
 }
 
@@ -761,7 +828,7 @@ function update() {
   if (level.endless) {   // keep the high score up to date, live
     const sc = endlessScore();
     if (sc > endlessBest) {
-      if (!bestBeatenShown && endlessBest > 0) { banner = { text: '🏆 NEW BEST!', sub: 'You beat the high score — keep going!', t: 90 }; bestBeatenShown = true; sfx.life(); }
+      if (!bestBeatenShown && endlessBest > 0) { banner = { text: 'NEW BEST!', sub: 'You beat the high score — keep going!', t: 90 }; bestBeatenShown = true; sfx.life(); }
       endlessBest = sc; saveBest();
     }
   }
@@ -825,6 +892,19 @@ function update() {
         player.vy = 0;
         player.onGround = true;
         if (s.ground || level.endless) { player.safeX = player.x; player.safeY = player.y; }   // in the endless run, every platform is a checkpoint
+      }
+    }
+
+    // Gates are WALLS from the side: if Minx runs into one, it stops him —
+    // he has to jump over it (or land on top).
+    for (const g of gateList) {
+      const top = g.surfY - GATE_H;
+      const overlapX = player.x + player.w > g.x && player.x < g.x + GATE_W;
+      const overlapY = player.y + player.h > top + 10 && player.y < g.surfY;
+      if (overlapX && overlapY) {
+        if (player.vx > 0) player.x = g.x - player.w;
+        else if (player.vx < 0) player.x = g.x + GATE_W;
+        else player.x = (player.x + player.w / 2 < g.x + GATE_W / 2) ? g.x - player.w : g.x + GATE_W;
       }
     }
 
@@ -920,6 +1000,54 @@ function drawBackground() {
     px(sx, GROUND_Y - 26, 62, 28, '#1b5e20');
     px(sx + 9, GROUND_Y - 38, 42, 16, '#2e7d32');
     px(sx + 18, GROUND_Y - 13, 5, 13, '#43a047'); px(sx + 36, GROUND_Y - 15, 5, 15, '#43a047');
+  }
+  // ---- A BUSTLING JUNGLE (Finbar): ferns, flowers, mushrooms, and LIFE ----
+  const now = Date.now();
+  // ferns unfurling along the floor (stepped pixel fronds)
+  for (let wx = Math.floor(cameraX / 67) * 67 - 67; wx < cameraX + W + 67; wx += 67) {
+    const sx = wx - cameraX + 20; if (sx < -50 || sx > W + 30) continue;
+    const sway = Math.round(Math.sin(now / 700 + wx) * 1);
+    for (let k = -2; k <= 2; k++) {
+      const dir = Math.sign(k), reach = (3 - Math.abs(k)) * 4 + 6;
+      for (let sIdx = 0; sIdx < 3; sIdx++) {
+        px(sx + dir * sIdx * 4 + sway * sIdx, GROUND_Y - 6 - sIdx * 5 - Math.abs(k), Math.max(3, reach - sIdx * 4), 4, sIdx ? '#43a047' : '#2e7d32');
+      }
+    }
+    px(sx - 2, GROUND_Y - 5, 5, 5, '#1b5e20');
+  }
+  // flowers and berries sprinkled through the bushes
+  for (let wx = Math.floor(cameraX / 53) * 53 - 53; wx < cameraX + W + 53; wx += 53) {
+    const sx = wx - cameraX; if (sx < -20 || sx > W + 10) continue;
+    const hsh = Math.abs(Math.sin(wx * 12.9898) * 43758.5453) % 1;
+    if (hsh < 0.45) { px(sx + 8, GROUND_Y - 34, 5, 5, '#ff80ab'); px(sx + 10, GROUND_Y - 32, 2, 2, '#fff59d'); }
+    else if (hsh < 0.8) { px(sx + 30, GROUND_Y - 22, 4, 4, '#e53935'); px(sx + 38, GROUND_Y - 27, 4, 4, '#e53935'); px(sx + 34, GROUND_Y - 18, 4, 4, '#c62828'); }
+  }
+  // mushrooms on the forest floor
+  for (let wx = Math.floor(cameraX / 230) * 230 - 230; wx < cameraX + W + 230; wx += 230) {
+    const sx = wx - cameraX + 90; if (sx < -30 || sx > W + 20) continue;
+    px(sx + 4, GROUND_Y - 8, 6, 8, '#f5f0e1');
+    px(sx, GROUND_Y - 14, 14, 7, '#e53935');
+    px(sx + 3, GROUND_Y - 12, 3, 3, '#ffffff'); px(sx + 9, GROUND_Y - 10, 2, 2, '#ffffff');
+  }
+  // pixel birds gliding across the canopy
+  for (let i = 0; i < 3; i++) {
+    const bx = ((now / (26 + i * 9) + i * 340 - cameraX * 0.12) % (W + 240) + W + 240) % (W + 240) - 120;
+    const by = 52 + i * 44 + Math.round(Math.sin(now / 500 + i * 2) * 6);
+    const flap = Math.floor(now / 180 + i) % 2 === 0;
+    px(bx, by, 12, 4, '#37474f');
+    px(bx + (flap ? -5 : -3), by + (flap ? -4 : 2), 6, 3, '#37474f');
+    px(bx + 11, by + (flap ? -4 : 2), 6, 3, '#37474f');
+    px(bx + 12, by + 1, 3, 2, '#ffb300');
+  }
+  // butterflies fluttering over the bushes
+  const bc = ['#ff80ab', '#ba68c8', '#64b5f6'];
+  for (let i = 0; i < 3; i++) {
+    const bx = ((i * 331 + Math.sin(now / 900 + i * 2.4) * 46 - cameraX) % (W + 80) + W + 80) % (W + 80) - 40 + 60;
+    const by = GROUND_Y - 66 - i * 18 + Math.round(Math.sin(now / 300 + i * 1.7) * 9);
+    const open = Math.floor(now / 130 + i) % 2 === 0;
+    px(bx - (open ? 6 : 3), by, open ? 6 : 3, 5, bc[i]);
+    px(bx + 2, by, open ? 6 : 3, 5, bc[i]);
+    px(bx, by, 2, 7, '#263238');
   }
 }
 
@@ -1049,6 +1177,17 @@ function drawWorld() {
     const bobY = Math.sin(Date.now() / 300 + b.bob) * 3;
     drawBanana(sx, b.y + bobY);
   }
+  // gates: little wooden barriers standing on the ground/platforms — jump over!
+  for (const g of gateList) {
+    const sx = g.x - cameraX; if (sx < -40 || sx > W + 20) continue;
+    const top = g.surfY - GATE_H;
+    px(sx, top, 4, GATE_H, '#6d4c41'); px(sx + GATE_W - 4, top, 4, GATE_H, '#6d4c41');   // posts
+    px(sx, top + 6, GATE_W, 7, '#a1887f');                                              // planks
+    px(sx, top + 22, GATE_W, 7, '#a1887f');
+    px(sx, top + 36, GATE_W, 7, '#a1887f');
+    px(sx + 2, top + 13, 3, 10, '#8d6e63'); px(sx + GATE_W - 5, top + 29, 3, 10, '#8d6e63');   // pegs
+    px(sx + 6, top - 4, 6, 5, '#e53935');                                               // a little red flag on top
+  }
   // goal: golden tree, rooted at the level's goal height (a platform in Level 1)
   const gx = level.goalX - cameraX, gy = level.goalY;
   if (gx > -120 && gx < W + 60) {
@@ -1091,11 +1230,8 @@ function drawMonkey() {
   const jumping = !player.onGround && !player.swinging;
   // a little bob while running; body rises slightly in the jump pose
   const y = player.y - (running ? Math.round(Math.abs(Math.sin(player.animT)) * 2) : 0);
-  let pal = ALL_SKINS[charIdx] || CHARACTERS[0];
-  if (pal.rainbow) {   // the RAINBOW monkey cycles through every colour as he plays
-    const hue = Math.floor((performance.now() / 12) % 360);
-    pal = { fur: 'hsl(' + hue + ', 85%, 55%)', dark: 'hsl(' + ((hue + 60) % 360) + ', 70%, 38%)', eyes: pal.eyes };
-  }
+  const pal = ALL_SKINS[charIdx] || CHARACTERS[0];
+  const isRB = !!pal.rainbow;   // the RAINBOW monkey wears rainbow STRIPES (much more rainbowy)
   const brown = pal.fur, dark = pal.dark, tan = '#d7a679';   // fur colour comes from the main-menu character choice
   // tail (sticks up in the air, wags while running)
   if (jumping) px(x - 4, y + 8, 8, 5, dark);
@@ -1116,7 +1252,8 @@ function drawMonkey() {
     px(x + 20 - Math.max(0, -s), y + 32 - Math.max(0, s), 9, 8, dark);
   }
   // body
-  px(x + 5, y + 14, 24, 20, brown);
+  if (isRB) { for (let i = 0; i < 5; i++) px(x + 5, y + 14 + i * 4, 24, 4, RAINBOW[i]); }
+  else px(x + 5, y + 14, 24, 20, brown);
   px(x + 11, y + 18, 12, 13, tan);
   // arms
   if (player.swinging) { px(x + 13, y - 8, 8, 14, dark); }              // holding the vine overhead
@@ -1128,14 +1265,21 @@ function drawMonkey() {
     px(x + 28, y + 16 + a, 6, 14, dark);
   }
   // ears + head
-  px(x + 1, y + 4, 6, 9, brown); px(x + 27, y + 4, 6, 9, brown);
-  px(x + 6, y, 22, 18, brown);
+  px(x + 1, y + 4, 6, 9, isRB ? RAINBOW[0] : brown); px(x + 27, y + 4, 6, 9, isRB ? RAINBOW[5] : brown);
+  if (isRB) { for (let i = 0; i < 5; i++) px(x + 6, y + i * 4, 22, Math.min(4, 18 - i * 4), RAINBOW[(i + 2) % 6]); }
+  else px(x + 6, y, 22, 18, brown);
   px(x + 10, y + 8, 14, 10, tan);                 // face
   px(x + 12, y + 5, 3, 3, pal.eyes || '#212121');  // eyes (glowing purple on the Void monkey)
   px(x + 20, y + 5, 3, 3, pal.eyes || '#212121');
   if (jumping) { px(x + 15, y + 12, 5, 4, '#212121'); }   // "ooh!" mouth in the air
   else px(x + 15, y + 13, 5, 2, '#212121');             // smile
   if (ALL_SKINS[charIdx] && ALL_SKINS[charIdx].robot) { px(x + 16, y - 6, 2, 6, dark); px(x + 14, y - 10, 6, 5, '#ff1744'); }   // robot antenna
+  if (ALL_SKINS[charIdx] && ALL_SKINS[charIdx].hazmat) {   // gas mask in-game too
+    px(x + 9, y + 4, 16, 6, '#37474f');
+    px(x + 11, y + 5, 4, 4, '#b3e5fc'); px(x + 19, y + 5, 4, 4, '#b3e5fc');
+    px(x + 11, y + 11, 12, 7, '#90a4ae');
+    px(x + 15, y + 13, 4, 4, '#546e7a');
+  }
   drawHatOn(px, x, y, player.swinging ? 'none' : hatId);   // his hat comes off while he's holding a vine overhead
 }
 
@@ -1143,7 +1287,7 @@ function drawHUD() {
   // top bar panel
   px(0, 0, W, 46, 'rgba(14,36,18,0.85)');
   // LIFE label + golden bar in 3 sections
-  ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px "Courier New", monospace'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff'; ctx.font = '11px "Press Start 2P", monospace'; ctx.textAlign = 'left';
   ctx.fillText('LIVES', 12, 29);
   const barX = 66, barY = 12, secW = 52, barH = 22;
   for (let i = 0; i < 3; i++) {
@@ -1154,7 +1298,7 @@ function drawHUD() {
   }
   // banana counter + progress dots to the next life (counts 1,2,3)
   drawBanana(262, 10);
-  ctx.fillStyle = '#ffffff'; ctx.font = 'bold 17px "Courier New", monospace';
+  ctx.fillStyle = '#ffffff'; ctx.font = '12px "Press Start 2P", monospace';
   ctx.fillText('× ' + totalBananas, 292, 30);
   const prog = totalBananas % 3;
   for (let i = 0; i < 3; i++) {
@@ -1166,15 +1310,15 @@ function drawHUD() {
   ctx.fillStyle = '#b8e6a0'; ctx.font = '12px "Courier New", monospace';
   ctx.fillText('3 = +1 life', 458, 28);
   // score + level, right side
-  ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px "Courier New", monospace'; ctx.textAlign = 'right';
+  ctx.fillStyle = '#ffffff'; ctx.font = '11px "Press Start 2P", monospace'; ctx.textAlign = 'right';
   ctx.fillText(level.endless ? 'ENDLESS SCORE ' + endlessScore() : 'SCORE ' + score, W - 12, 29);
   ctx.textAlign = 'left';
   if (level.endless) {
     // 🏆 HIGH-SCORE BAR: a golden bar that fills up as this run's score
     // climbs toward the best ever. Fill it completely to beat the best!
     const sc = endlessScore();
-    ctx.fillStyle = '#ffd83d'; ctx.font = 'bold 12px "Courier New", monospace'; ctx.textAlign = 'right';
-    ctx.fillText('🏆 BEST ' + endlessBest, W - 12, 46 + 14);
+    ctx.fillStyle = '#ffd83d'; ctx.font = '9px "Press Start 2P", monospace'; ctx.textAlign = 'right';
+    ctx.fillText('BEST ' + endlessBest, W - 12, 46 + 14);
     ctx.textAlign = 'left';
     const bx = W - 232, by = 66, bw = 220, bh = 11;
     px(bx, by, bw, bh, '#3a3a3a');
@@ -1199,7 +1343,7 @@ function draw() {
   // popups
   ctx.textAlign = 'center';
   for (const p of popups) {
-    ctx.font = 'bold 18px "Courier New", monospace';
+    ctx.font = '13px "Press Start 2P", monospace';
     ctx.fillStyle = p.color;
     ctx.fillText(p.text, p.x - cameraX, p.y - (55 - p.t) * 0.5);
   }
@@ -1208,7 +1352,7 @@ function draw() {
   if (banner && state === 'playing') {
     ctx.fillStyle = 'rgba(14,36,18,0.75)';
     ctx.fillRect(0, 150, W, banner.sub ? 92 : 60);
-    ctx.fillStyle = '#ffd83d'; ctx.font = 'bold 28px "Courier New", monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd83d'; ctx.font = '20px "Press Start 2P", monospace'; ctx.textAlign = 'center';
     ctx.fillText(banner.text, W / 2, 190);
     if (banner.sub) {
       ctx.fillStyle = '#ffffff'; ctx.font = '14px "Courier New", monospace';

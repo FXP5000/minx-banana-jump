@@ -10,10 +10,10 @@ Just open `index.html` in any web browser — no build step, no downloads, nothi
 
 ## Main menu & shop
 
-Pressing START opens the **main menu** first. Every banana collected in the game also fills your **Banana Bank** (it remembers your total between visits), and the bank buys things in the menu:
+Pressing START opens the **main menu** first — it's its own full page with a solid black background, pixel-letter headings wrapped in vines, and every skin and hat in a neat row of same-size tiles. Every banana collected in the game also fills your **Banana Bank** (it remembers your total between visits), and the bank buys things in the menu:
 
 - **Common monkeys** — lots of colours (Red, Orange, Yellow, Green, Blue, Purple, Pink, Cyan, Lime, Snow, Midnight), 10–40 bananas each. Classic brown Minx is free.
-- **RARE monkeys** — prices climb steeply, the cooler they look: ⭐ **Golden** (300), 🌌 **Void** (500, glowing purple eyes), 🤖 **Robot** (600, metal fur, red LED eyes and an antenna), 💎 **Diamond** (750), and the 🌈 **Rainbow** monkey (1000 — his fur cycles through every colour as he plays!).
+- **RARE monkeys** — prices climb steeply, the cooler they look: ⭐ **Golden** (300), 🌌 **Void** (500, glowing purple eyes), **Robot** (600, metal fur, red LED eyes and an antenna), **Diamond** (750), and the **Rainbow** monkey (1000 — rainbow stripes all over!).
 - **🌟 Skin of the Day** — one special skin (Sunset, Bubblegum, Mint, Lavender, Coral, Frost, Honey) is in the shop each day on rotation, 120 bananas. A different one tomorrow — once bought, it's yours forever.
 - **Hats & accessories** — 18 of them, from a 15-banana Cap up to the 😇 Halo (400): Beanie, Mohawk, Headphones, Antlers, Cowboy Hat, Santa Hat, Chef Hat, Pirate Hat, Top Hat, 👑 Crown, 🧙 Wizard Hat and a 🛡️ Knight Helmet (just for looks — it doesn't change the game). Minx wears his hat in the game (he takes it off while swinging on a vine).
 
@@ -29,7 +29,7 @@ Your bank, monkeys and hats are saved, so they are still yours next time you pla
 
 The camera follows Minx and only ever scrolls **forward** — it never scrolls back, and Minx can't walk out of the left side of the screen. So once an area has scrolled past, it's gone: the only way back to the start of a level is dying (which restarts the level) or game over.
 
-Minx moves at his original speed. The levels are a real challenge now — wider gaps and bigger steps than before — but every jump is audited to be makeable, and the vines are long: the swing reaches right over the next platform. In the Endless Run, the farther you get, the harder it gets: gaps widen, steps grow, and vine crossings stretch. Behind it all is a crowded jungle canopy so thick you can't see the sky, and the water is a stony creek with ripples, pebbles, moss — and fallen logs floating in it. Collecting a banana bursts into sparkles, and splashing into the creek makes a proper splash.
+Minx moves at his original speed, and the difficulty is MEDIUM — right between easy and hard — with every jump audited to be makeable, and vines long enough that the swing reaches right over the next platform. In the Endless Run it gets trickier the farther you go, but gently. Wooden GATE obstacles stand on some ground and platforms — jump over them! Everything is drawn in chunky pixels (the game renders at half size and stretches up), the words use a pixel font, there are no emojis, and behind it all is a bustling jungle: canopy so thick you can't see the sky, ferns, flowers, mushrooms, pixel birds gliding through the trees and butterflies over the bushes — and the water is a stony creek with ripples, pebbles, moss and fallen logs floating in it. Collecting a banana bursts into sparkles, and splashing into the creek makes a proper splash.
 
 Minx has a **running animation** (pumping legs and arms, a little bob) and a **jumping animation** (arms up, legs tucked, "ooh!" face).
 
@@ -46,9 +46,9 @@ Minx has a **running animation** (pumping legs and arms, a little bob) and a **j
 
 ## The levels
 
-- **Level 1 — Little Hops:** Just jumping. Flat ground to start, a first platform that's a little hop up, then platforms over the water that gradually get higher and come back down, climbing at the end to the golden tree's platform. Bananas show the way.
-- **Level 2 — Vine Swings:** One new idea — vines. Like Level 1, the ground is only at the start, so there's no running underneath: platform clusters over the water are linked by vines. Swing gently across each vine gap to the landing platform on the other side, then climb to the golden tree's platform.
-- **Level 3 — Tunnel Tree:** A learning level about *timing* — when to jump and when NOT to. Minx runs through a tunnel carved into a giant tree. The tunnel floor has gaps over the creek (jump those!), but thick roots hang from the tunnel roof: jumping under one bonks his head and stops the jump, so the bananas under roots must be collected by running. After the exit, he climbs the outside of the tree to the golden platform in its branches.
+- **Level 1 — Jumping Practice:** Just jumping. Flat ground to start, a first platform that's a little hop up, then platforms over the water that gradually get higher and come back down, climbing at the end to the golden tree's platform. Bananas show the way.
+- **Level 2 — Vine Practice:** One new idea — vines. Like Level 1, the ground is only at the start, so there's no running underneath: platform clusters over the water are linked by vines. Swing gently across each vine gap to the landing platform on the other side, then climb to the golden tree's platform.
+- **Level 3 — Tunnel Practice:** A learning level about *timing* — when to jump and when NOT to. Minx runs through a tunnel carved into a giant tree. The tunnel floor has gaps over the creek (jump those!), but thick roots hang from the tunnel roof: jumping under one bonks his head and stops the jump, so the bananas under roots must be collected by running. After the exit, he climbs the outside of the tree to the golden platform in its branches.
 - **Level 4 — Endless Run (unlocked by beating Level 3):** No finish line! The jungle generates itself ahead of Minx forever, mixing **all three** level ideas in a repeating pattern: jumping platforms, vine swings, and whole Tunnel Tree sections (with floor gaps to jump and hanging roots not to jump under). Score = bananas × 10 + metres run. A splash sends Minx back to the last platform he stood on; the run ends when his 3 lives run out. The **🏆 high-score bar at the top** fills up as your score climbs toward the best ever, and the best score is remembered between visits.
 
 The game also runs at a locked 60 steps per second, so Minx's speed is exactly the same on every screen — fast-refresh displays used to run him at double speed.
