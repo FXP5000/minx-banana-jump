@@ -989,6 +989,54 @@ function drawBackground() {
     const dx = ((i * 173 - cameraX * 0.3) % (W + 120) + W + 120) % (W + 120) - 60;
     blob(dx, 40 + (i % 4) * 52, 13 + (i % 3) * 5, 'rgba(220,255,180,0.13)');
   }
+  // ---- THE FOREST BEYOND (Finbar): a second, darker forest behind the
+  // near trees, so the jungle feels deep — and in the GAPS between the
+  // near trees you can spot bushes and animals living back there. ----
+  const farFloor = GROUND_Y - 30;
+  for (let i = 0; i < 8; i++) {   // far tree silhouettes, slower parallax = farther away
+    const fx = ((i * 128 - cameraX * 0.38) % (W + 180) + W + 180) % (W + 180) - 90;
+    px(fx + 30, 216, 10, farFloor - 206, '#2a1f14');
+    blob(fx + 35, 192, 54, '#16351a'); blob(fx + 2, 214, 36, '#1d4020'); blob(fx + 68, 212, 38, '#143017');
+  }
+  for (let i = 0; i < 6; i++) {   // life in the gaps: one bush or animal per stretch of far forest
+    const gx = ((i * 173 + 60 - cameraX * 0.42) % (W + 240) + W + 240) % (W + 240) - 120;
+    if (gx < -70 || gx > W + 40) continue;
+    const hsh = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+    const twitch = Math.round(Math.sin(Date.now() / 600 + i * 2.2) * 1);   // tiny smooth ear/head movements
+    if (hsh < 0.30) {           // a leafy bush with berries
+      blob(gx + 24, farFloor - 14, 26, '#1d4020'); blob(gx + 6, farFloor - 8, 17, '#24512a'); blob(gx + 42, farFloor - 8, 17, '#1d4020');
+      px(gx + 14, farFloor - 20, 4, 4, '#e53935'); px(gx + 30, farFloor - 12, 4, 4, '#e53935'); px(gx + 22, farFloor - 26, 4, 4, '#ff80ab');
+    } else if (hsh < 0.52) {    // a rabbit, ears up
+      px(gx + 10, farFloor - 16, 22, 16, '#90a4ae');                       // body
+      px(gx + 26, farFloor - 26 + twitch, 14, 14, '#90a4ae');               // head
+      px(gx + 28, farFloor - 42 + twitch, 4, 16, '#90a4ae'); px(gx + 29, farFloor - 40 + twitch, 2, 10, '#f8bbd0');  // ear + pink inner
+      px(gx + 35, farFloor - 41 + twitch, 4, 15, '#90a4ae'); px(gx + 36, farFloor - 39 + twitch, 2, 9, '#f8bbd0');
+      px(gx + 36, farFloor - 21 + twitch, 3, 3, '#263238');                 // eye
+      px(gx + 4, farFloor - 12, 7, 7, '#eceff1');                           // fluffy tail
+    } else if (hsh < 0.72) {    // a fox, big bushy tail
+      px(gx + 16, farFloor - 14, 26, 14, '#e65100');                       // body
+      px(gx + 2, farFloor - 20, 16, 12, '#e65100'); px(gx - 2, farFloor - 9, 8, 6, '#eceff1');   // tail + white tip
+      px(gx + 38, farFloor - 25 + twitch, 15, 15, '#ef6c00');               // head
+      px(gx + 39, farFloor - 32 + twitch, 5, 8, '#e65100'); px(gx + 47, farFloor - 32 + twitch, 5, 8, '#e65100');  // pointy ears
+      px(gx + 49, farFloor - 16 + twitch, 6, 6, '#f5f0e1');                 // snout
+      px(gx + 44, farFloor - 20 + twitch, 3, 3, '#263238');                 // eye
+      px(gx + 20, farFloor - 4, 5, 4, '#bf360c'); px(gx + 34, farFloor - 4, 5, 4, '#bf360c');   // feet
+    } else if (hsh < 0.88) {    // a squirrel on a stump, holding an acorn
+      px(gx + 14, farFloor - 10, 24, 10, '#5d4037'); px(gx + 14, farFloor - 10, 24, 3, '#795548');   // stump
+      px(gx + 22, farFloor - 24, 13, 14, '#8d6e63');                       // body
+      px(gx + 10, farFloor - 30, 8, 20, '#795548'); px(gx + 6, farFloor - 34, 8, 10, '#795548');     // big curved tail
+      px(gx + 24, farFloor - 33 + twitch, 11, 11, '#a1887f');               // head
+      px(gx + 26, farFloor - 38 + twitch, 4, 6, '#8d6e63');                 // ear
+      px(gx + 31, farFloor - 29 + twitch, 3, 3, '#263238');                 // eye
+      px(gx + 33, farFloor - 20, 6, 6, '#6d4c2f'); px(gx + 34, farFloor - 22, 4, 3, '#43a047');     // acorn + cap
+    } else {                    // two frogs on a leaf by a tiny pond
+      px(gx + 6, farFloor - 3, 44, 3, '#4fc3f7');                           // pond glint
+      px(gx + 12, farFloor - 6, 20, 4, '#2e7d32');                          // leaf
+      px(gx + 15, farFloor - 13, 12, 8, '#43a047'); px(gx + 16, farFloor - 17, 4, 5, '#43a047'); px(gx + 23, farFloor - 17, 4, 5, '#43a047');  // frog + eye bumps
+      px(gx + 17, farFloor - 16, 2, 2, '#263238'); px(gx + 24, farFloor - 16, 2, 2, '#263238');
+      px(gx + 34, farFloor - 10, 8, 5, '#66bb6a');                           // little frog
+    }
+  }
   // a thicket of trunks below the canopy, packed across the screen
   for (let i = 0; i < 10; i++) {
     const tx = ((i * 105 - cameraX * 0.55) % (W + 140) + W + 140) % (W + 140) - 70;
