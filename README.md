@@ -8,6 +8,16 @@ Help **Minx the monkey** jump across platforms, collect bananas, and reach the g
 
 Just open `index.html` in any web browser — no build step, no downloads, nothing to install.
 
+## Main menu & shop
+
+Pressing START opens the **main menu** first. Every banana collected in the game also fills your **Banana Bank** (it remembers your total between visits), and the bank buys things in the menu:
+
+- **Common monkeys** — the rainbow colours (Red, Orange, Yellow, Green, Blue, Purple), 10–20 bananas each. Classic brown Minx is free.
+- **RARE monkeys** — the ⭐ **Golden** monkey (150 bananas) and the 🌌 **Void** monkey (250 bananas, with glowing purple eyes).
+- **Hats & accessories** — Cap, Flower, Party Hat, Shades, Banana Hat and the 👑 Crown (15–100 bananas). Minx wears his hat in the game (he takes it off while swinging on a vine).
+
+Your bank, monkeys and hats are saved, so they are still yours next time you play.
+
 **You control Minx** — he goes where you steer him:
 
 - **Move backwards / forwards:** ◀ ▶ arrow keys (or A / D) — on phones/tablets there are ◀ ▶ buttons

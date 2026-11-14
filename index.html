@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Minx's Banana Jump — an 8-bit jungle game for kids</title>
+<title>Minx's Banana Jump — an 8-bit jungle game</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -36,6 +36,10 @@
     padding: 12px 30px; border-radius: 8px; letter-spacing: 1px;
   }
   .big-btn:active { transform: translateY(3px); border-bottom-width: 2px; }
+  #char-row, #hat-row { justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .char-btn { background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 12px; padding: 6px 6px 3px; cursor: pointer; color: #fff; font-family: inherit; font-size: 12px; }
+  .char-btn:hover { background: rgba(255,255,255,0.18); }
+  .char-btn.sel { border-color: #ffd83d; background: rgba(255,216,61,0.15); }
   #touch { display: none; width: min(960px, 100%); justify-content: space-between; margin-top: 10px; gap: 10px; }
   #touch button {
     font-family: inherit; font-size: 26px; flex: 1; padding: 16px 0; border-radius: 10px;
@@ -49,7 +53,7 @@
 </head>
 <body>
   <h1>🍌 MINX'S BANANA JUMP 🐵</h1>
-  <div class="sub">An 8-bit jungle game for kids — jump, collect, count!</div>
+  <div class="sub">An 8-bit jungle game — jump and collect!</div>
 
   <div id="wrap">
     <canvas id="game" width="800" height="450"></canvas>
@@ -61,6 +65,9 @@
       Level 1 is just jumping. Level 2 adds swinging vines. Level 3 is the Tunnel Tree.<br>
       Every <b>3 bananas = 1 extra life</b>. Count along: 1, 2, 3!<br>
       Beat all three levels to unlock the <b>🌴 Endless Level</b> — how high can you score?</p>
+      <div id="bank-line" style="display:none; font-size:19px; margin-top:10px;">🍌 Bank: <b id="bank-n">0</b> bananas</div>
+      <div id="char-row" style="display:none"></div>
+      <div id="hat-row" style="display:none"></div>
       <button class="big-btn" id="ov-btn">▶ START</button>
     </div>
   </div>
@@ -74,7 +81,8 @@
   <div class="hint">
     Move: <kbd>◀</kbd> <kbd>▶</kbd> (or <kbd>A</kbd> / <kbd>D</kbd>) &nbsp;•&nbsp;
     Jump / let go of a vine: <kbd>SPACE</kbd> (or click / tap) &nbsp;•&nbsp;
-    Grab a vine: jump toward it &nbsp;•&nbsp; Restart level: <kbd>R</kbd>
+    Grab a vine: jump toward it &nbsp;•&nbsp; Restart level: <kbd>R</kbd><br>
+    <button id="menu-btn" class="big-btn" style="font-size:15px; padding:8px 18px; margin-top:6px;">🐵 Change Monkey</button>
   </div>
 
 <script>
@@ -394,6 +402,7 @@ function collectBanana(b) {
   spawnParticles(b.x + 11, b.y + 11, '#fff59d', 4, 2, 2);
   if (level.endless) runBananas++;
   totalBananas++;
+  bank++; save('minxBank', bank);   // every banana also fills the Banana Bank for the shop
   const countInThree = ((totalBananas - 1) % 3) + 1;   // 1, 2, 3, 1, 2, 3… the counting lesson
   score += 10;
   popups.push({ x: b.x + 10, y: b.y - 8, text: countInThree + '!', t: 55, color: '#ffd83d' });
@@ -506,9 +515,130 @@ function showOverlay(title, html, btnLabel, onClick) {
   ovText.innerHTML = html;
   ovBtn.textContent = btnLabel;
   ovBtn.onclick = onClick;
+  document.getElementById('bank-line').style.display = 'none';   // shop rows only show in the main menu
+  document.getElementById('char-row').style.display = 'none';
+  document.getElementById('hat-row').style.display = 'none';
   overlay.classList.remove('hidden');
 }
-ovBtn.onclick = newGame;
+ovBtn.onclick = openMenu;
+
+/* ================= MAIN MENU: monkeys, rares, hats — bought with bananas ================
+   Finbar's design: a main menu before the game starts. Common monkeys are the
+   rainbow colours; RARE monkeys (Golden, Void) cost lots of bananas. Hats and
+   accessories are bought the same way and worn in the game. Every banana
+   Minx collects goes into a persistent Banana Bank (localStorage). */
+const CHARACTERS = [
+  { name: 'Classic', fur: '#795548', dark: '#5d4037', price: 0 },
+  { name: 'Red',     fur: '#e53935', dark: '#b71c1c', price: 10 },
+  { name: 'Orange',  fur: '#fb8c00', dark: '#e65100', price: 10 },
+  { name: 'Yellow',  fur: '#fdd835', dark: '#f9a825', price: 15 },
+  { name: 'Green',   fur: '#43a047', dark: '#2e7d32', price: 15 },
+  { name: 'Blue',    fur: '#1e88e5', dark: '#1565c0', price: 20 },
+  { name: 'Purple',  fur: '#8e24aa', dark: '#6a1b9a', price: 20 },
+  { name: '⭐ GOLDEN', fur: '#ffd83d', dark: '#d4a017', price: 150, rare: true },
+  { name: '🌌 VOID',   fur: '#372b4d', dark: '#1d1830', price: 250, rare: true, eyes: '#b388ff' },
+];
+const HATS = [
+  { id: 'none',   name: 'No Hat',     price: 0 },
+  { id: 'cap',    name: 'Cap',        price: 15 },
+  { id: 'flower', name: 'Flower',     price: 20 },
+  { id: 'party',  name: 'Party Hat',  price: 25 },
+  { id: 'shades', name: 'Shades',     price: 40 },
+  { id: 'banana', name: 'Banana Hat', price: 60 },
+  { id: 'crown',  name: '👑 Crown',   price: 100 },
+];
+function store(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } }
+function save(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
+let bank = store('minxBank', 0);
+let ownedChars = store('minxOwnedChars', [0]);
+let ownedHats = store('minxOwnedHats', ['none']);
+let charIdx = store('minxChar', 0);
+if (!ownedChars.includes(charIdx)) charIdx = 0;
+let hatId = store('minxHat', 'none');
+if (!ownedHats.includes(hatId)) hatId = 'none';
+
+// Draws a hat/accessory with a rect painter P. In game pixels the monkey's
+// head spans ox+6..ox+28 and oy..oy+18 (see drawMonkey); previews reuse it.
+function drawHatOn(P, ox, oy, hat) {
+  if (!hat || hat === 'none') return;
+  if (hat === 'cap') { P(ox + 4, oy - 3, 26, 7, '#e53935'); P(ox + 26, oy + 2, 11, 4, '#b71c1c'); P(ox + 14, oy - 6, 6, 4, '#b71c1c'); }
+  else if (hat === 'flower') { P(ox + 25, oy + 1, 5, 5, '#f48fb1'); P(ox + 29, oy + 4, 5, 5, '#f48fb1'); P(ox + 25, oy + 7, 5, 5, '#f48fb1'); P(ox + 27, oy + 4, 4, 4, '#ffd83d'); }
+  else if (hat === 'party') { P(ox + 9, oy - 4, 16, 5, '#8e24aa'); P(ox + 12, oy - 9, 10, 5, '#fdd835'); P(ox + 14, oy - 14, 6, 5, '#e53935'); P(ox + 15, oy - 18, 5, 5, '#ffd83d'); }
+  else if (hat === 'shades') { P(ox + 8, oy + 3, 18, 6, '#14141f'); P(ox + 6, oy + 4, 3, 3, '#14141f'); P(ox + 25, oy + 4, 3, 3, '#14141f'); }
+  else if (hat === 'banana') { P(ox + 2, oy - 5, 8, 4, '#ffd83d'); P(ox + 8, oy - 8, 16, 5, '#ffd83d'); P(ox + 22, oy - 5, 9, 4, '#ffd83d'); P(ox + 15, oy - 11, 4, 4, '#6d4c41'); }
+  else if (hat === 'crown') { P(ox + 6, oy - 3, 22, 6, '#ffd83d'); P(ox + 6, oy - 8, 5, 6, '#ffd83d'); P(ox + 15, oy - 9, 5, 7, '#ffd83d'); P(ox + 23, oy - 8, 5, 6, '#ffd83d'); }
+}
+function drawMonkeyPreview(c2, pal, hat) {
+  const P = (x, y, w, h, c) => { c2.fillStyle = c; c2.fillRect(x, y, w, h); };
+  P(14, 32, 26, 20, pal.fur); P(20, 37, 14, 13, '#d7a679');
+  P(6, 42, 6, 10, pal.dark); P(42, 42, 6, 10, pal.dark);
+  P(7, 20, 7, 10, pal.fur); P(40, 20, 7, 10, pal.fur);
+  P(13, 14, 28, 22, pal.fur);
+  P(18, 24, 18, 12, '#d7a679');
+  P(21, 21, 4, 4, pal.eyes || '#212121'); P(31, 21, 4, 4, pal.eyes || '#212121');
+  P(24, 31, 6, 2, '#212121');
+  P(16, 50, 8, 6, pal.dark); P(30, 50, 8, 6, pal.dark);
+  drawHatOn(P, 7, 14, hat);
+}
+function drawHatPreview(c2, hat) {
+  const P = (x, y, w, h, c) => { c2.fillStyle = c; c2.fillRect(x, y, w, h); };
+  P(13, 24, 28, 22, '#795548'); P(18, 34, 18, 12, '#d7a679');
+  P(21, 31, 4, 4, '#212121'); P(31, 31, 4, 4, '#212121');
+  drawHatOn(P, 7, 24, hat);
+}
+function shopButton(label, price, owned, selected, previewFn, onPick) {
+  const b = document.createElement('button');
+  b.className = 'char-btn' + (selected ? ' sel' : '');
+  const cv = document.createElement('canvas'); cv.width = 54; cv.height = 58;
+  previewFn(cv.getContext('2d'));
+  b.appendChild(cv);
+  const d = document.createElement('div');
+  d.textContent = label + (selected ? ' ✔' : owned ? '' : ' — 🍌' + price);
+  b.appendChild(d);
+  b.addEventListener('click', onPick);
+  return b;
+}
+function renderShop() {
+  document.getElementById('bank-n').textContent = bank;
+  const cr = document.getElementById('char-row'); cr.innerHTML = '';
+  CHARACTERS.forEach((c, i) => {
+    const owned = ownedChars.includes(i);
+    cr.appendChild(shopButton(c.name, c.price, owned, charIdx === i,
+      (c2) => drawMonkeyPreview(c2, c, hatId),
+      () => {
+        if (owned) { charIdx = i; save('minxChar', charIdx); sfx.coin(); }
+        else if (bank >= c.price) { bank -= c.price; ownedChars.push(i); charIdx = i; save('minxBank', bank); save('minxOwnedChars', ownedChars); save('minxChar', charIdx); sfx.life(); }
+        else { sfx.bonk(); }
+        renderShop();
+      }));
+  });
+  const hr = document.getElementById('hat-row'); hr.innerHTML = '';
+  HATS.forEach((h) => {
+    const owned = ownedHats.includes(h.id);
+    hr.appendChild(shopButton(h.name, h.price, owned, hatId === h.id,
+      (c2) => drawHatPreview(c2, h.id),
+      () => {
+        if (owned) { hatId = h.id; save('minxHat', hatId); sfx.coin(); }
+        else if (bank >= h.price) { bank -= h.price; ownedHats.push(h.id); hatId = h.id; save('minxBank', bank); save('minxOwnedHats', ownedHats); save('minxHat', hatId); sfx.life(); }
+        else { sfx.bonk(); }
+        renderShop();
+      }));
+  });
+}
+function openMenu() {
+  state = 'menu';
+  ovTitle.textContent = "🐵 MINX'S MAIN MENU";
+  ovText.innerHTML = 'Pick your monkey and a hat!<br>Collect bananas in the game to fill your <b>Banana Bank</b>, then unlock<br><b>rainbow monkeys</b>, the RARE <b>⭐ Golden</b> and <b>🌌 Void</b> monkeys, and cool hats.';
+  ovBtn.textContent = '▶ PLAY!';
+  ovBtn.onclick = newGame;
+  document.getElementById('bank-line').style.display = 'block';
+  document.getElementById('char-row').style.display = 'flex';
+  document.getElementById('hat-row').style.display = 'flex';
+  overlay.classList.remove('hidden');
+  renderShop();
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
+document.getElementById('menu-btn').addEventListener('click', openMenu);
 
 /* ---------- physics & update ---------- */
 const GRAV = 0.6, MOVE = 3.4, JUMP = -11;   // Minx's ORIGINAL speed — now truly constant thanks to the fixed 60-steps-per-second loop below; the game is made easier by wide, spread-out platforms with smaller height steps
@@ -862,7 +992,8 @@ function drawMonkey() {
   const jumping = !player.onGround && !player.swinging;
   // a little bob while running; body rises slightly in the jump pose
   const y = player.y - (running ? Math.round(Math.abs(Math.sin(player.animT)) * 2) : 0);
-  const brown = '#795548', dark = '#5d4037', tan = '#d7a679';
+  const pal = CHARACTERS[charIdx];
+  const brown = pal.fur, dark = pal.dark, tan = '#d7a679';   // fur colour comes from the main-menu character choice
   // tail (sticks up in the air, wags while running)
   if (jumping) px(x - 4, y + 8, 8, 5, dark);
   else px(x - 6, y + 20 + (running ? Math.round(Math.sin(player.animT) * 2) : 0), 8, 5, dark);
@@ -897,10 +1028,11 @@ function drawMonkey() {
   px(x + 1, y + 4, 6, 9, brown); px(x + 27, y + 4, 6, 9, brown);
   px(x + 6, y, 22, 18, brown);
   px(x + 10, y + 8, 14, 10, tan);                 // face
-  px(x + 12, y + 5, 3, 3, '#212121');              // eyes
-  px(x + 20, y + 5, 3, 3, '#212121');
+  px(x + 12, y + 5, 3, 3, pal.eyes || '#212121');  // eyes (glowing purple on the Void monkey)
+  px(x + 20, y + 5, 3, 3, pal.eyes || '#212121');
   if (jumping) { px(x + 15, y + 12, 5, 4, '#212121'); }   // "ooh!" mouth in the air
   else px(x + 15, y + 13, 5, 2, '#212121');             // smile
+  drawHatOn(px, x, y, player.swinging ? 'none' : hatId);   // his hat comes off while he's holding a vine overhead
 }
 
 function drawHUD() {
