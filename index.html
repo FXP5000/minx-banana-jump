@@ -205,6 +205,7 @@ const sfx = {
   win:     () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.15), i * 110)); },
   swing:   () => beep(420, 0.08, 'triangle'),
   bonk:    () => beep(140, 0.09, 'square', 0.06),
+  coin:    () => { beep(880, 0.07); setTimeout(() => beep(1174, 0.1), 60); },   // equip-an-owned-item sound — pickSkin/pickHat call sfx.coin(); it MUST exist or the click throws before the menu can re-render
 };
 
 /* ---------- input ---------- */
@@ -1337,36 +1338,38 @@ function drawWorld() {
       [cx - 40, base - 182], [cx + 36, base - 184], [cx - 4, base - 206], [cx - 150, base - 104], [cx + 152, base - 106]];
     for (const hb of hang) { px(hb[0] + 11, hb[1] - 6, 3, 7, '#6d4c2f'); drawBanana(hb[0], hb[1]); }
     drawBanana(cx - 58, base - 232); drawBanana(cx + 58, base - 234);   // a couple nestled in the crown
-    // golden sparkles drifting on the tree
-    const tw = Math.floor(Date.now() / 400) % 3;
-    px(cx - 90 + tw * 60, base - 206, 4, 4, '#fff9c4'); px(cx + 84 - tw * 44, base - 232, 4, 4, '#fff9c4'); px(cx + 20 + tw * 30, base - 168, 4, 4, '#fff9c4');
+    // golden sparkles (Finbar): fixed in place on the crown, twinkling
+    // SLOWLY — a little plus-star that gently swells and fades where it
+    // sits. They never jump around (the old ones teleported every 400ms
+    // and read as a weird moving border).
+    const SPARKS = [[-96, -214], [-30, -238], [44, -226], [104, -196], [-58, -186], [12, -262], [78, -248]];
+    for (let si = 0; si < SPARKS.length; si++) {
+      const ph = Math.sin(Date.now() / 1300 + si * 1.7);
+      if (ph < 0.1) continue;
+      const ss = ph > 0.75 ? 3 : 2, sx = cx + SPARKS[si][0], sy = base + SPARKS[si][1];
+      px(sx - ss, sy - 1, ss * 2 + 2, 2, '#fff9c4'); px(sx - 1, sy - ss, 2, ss * 2 + 2, '#fff9c4');
+    }
   }
 }
 
 function drawBanana(x, y) {
-  // A SMOOTH PIXEL BANANA (Finbar): a clean sprite drawn row by row, the
-  // way real pixel art is made — one flat golden fill in a crescent
-  // silhouette, a light band along the top curve, a shaded band along the
-  // bottom, a little stem. No circles, no blobs, no rivets or ridges.
+  // A BANANA CRESCENT (Finbar): shaped like a crescent moon — one smooth
+  // curved band, pointed tips, a small stem at one end, ONE flat golden
+  // colour. Drawn row by row like a pixel sprite. Nothing else on it:
+  // no bands, no dots, no patterns.
   const ROWS = [
-    [[3, 7], [19, 23]],
-    [[2, 8], [18, 24]],
-    [[2, 9], [17, 24]],
-    [[3, 11], [15, 23]],
-    [[4, 13], [13, 21]],
-    [[5, 20]],
-    [[6, 19]],
-    [[7, 18]],
-    [[8, 17]]
+    [[2, 5], [21, 25]],
+    [[0, 6], [20, 26]],
+    [[0, 9], [17, 25]],
+    [[2, 12], [14, 24]],
+    [[4, 22]],
+    [[6, 20]],
+    [[8, 19]],
+    [[10, 16]]
   ];
-  for (let r = 0; r < ROWS.length; r++) {
-    const col = r >= 7 ? '#f9a825' : '#ffd83d';            // shaded band along the bottom curve
-    for (const run of ROWS[r]) px(x + run[0], y + r * 2, run[1] - run[0], 2, col);
-  }
-  px(x + 6, y + 6, 9, 2, '#fff59d');                        // light band along the top curve
-  px(x + 7, y + 8, 7, 2, '#fff59d');
-  px(x + 3, y - 3, 4, 4, '#6d4c2f');                        // stem
-  px(x + 4, y - 4, 2, 2, '#8bc34a');
+  for (let r = 0; r < ROWS.length; r++)
+    for (const run of ROWS[r]) px(x + run[0], y + r * 2, run[1] - run[0], 2, '#ffd83d');
+  px(x - 1, y + 1, 3, 3, '#6d4c2f');   // the stem, in line with the left tip
 }
 function drawMonkey() {
   const x = player.x - cameraX;
