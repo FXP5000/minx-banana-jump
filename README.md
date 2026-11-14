@@ -8,14 +8,17 @@ Help **Minx the monkey** jump across platforms, collect bananas, and reach the g
 
 Just open `index.html` in any web browser — no build step, no downloads, nothing to install.
 
-Minx **runs forward all by himself** — there's just **one key** to learn:
+**You control Minx** — he goes where you steer him:
 
-- **Jump:** SPACE (or click / tap the game — on phones/tablets there's one big TAP TO JUMP button)
+- **Move backwards / forwards:** ◀ ▶ arrow keys (or A / D) — on phones/tablets there are ◀ ▶ buttons
+- **Jump:** SPACE (or click / tap the game — and the ⬆ JUMP button on touch screens)
 - **Grab a vine (Level 2):** jump toward it — Minx grabs on automatically
 - **Let go of a vine:** SPACE again — the same jump button (after letting go, Minx can't grab straight back on for a moment, so letting go really works)
 - **Restart the level:** R
 
-Minx runs at his original speed, and the platforms are much wider and spread way out, with gentle height steps, so every jump is easy. The vines are long — the swing reaches right over the next platform. Behind it all is a crowded jungle canopy so thick you can't see the sky, and the water is a stony creek with ripples, pebbles, moss — and fallen logs floating in it. Collecting a banana bursts into sparkles, and splashing into the creek makes a proper splash.
+The camera follows Minx and only ever scrolls **forward** — it never scrolls back, and Minx can't walk out of the left side of the screen. So once an area has scrolled past, it's gone: the only way back to the start of a level is dying (which restarts the level) or game over.
+
+Minx moves at his original speed, and the platforms are much wider and spread way out, with gentle height steps, so every jump is easy. The vines are long — the swing reaches right over the next platform. Behind it all is a crowded jungle canopy so thick you can't see the sky, and the water is a stony creek with ripples, pebbles, moss — and fallen logs floating in it. Collecting a banana bursts into sparkles, and splashing into the creek makes a proper splash.
 
 Minx has a **running animation** (pumping legs and arms, a little bob) and a **jumping animation** (arms up, legs tucked, "ooh!" face).
 
