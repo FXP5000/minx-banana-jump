@@ -103,7 +103,7 @@
       <b>You control Minx:</b> move him with <b>◀ ▶</b> (or A / D) and jump with <b>SPACE</b>.<br>
       The screen follows him forwards — but it never scrolls back, so there's no going back to the start!<br>
       Level 1 is just jumping. Level 2 adds swinging vines. Level 3 is the Tunnel Tree.<br>
-      Every <b>3 bananas = 1 extra life</b>. Count along: 1, 2, 3!<br>
+      Every <b>5 bananas = 1 extra life</b>. Count along: 1, 2, 3, 4, 5!<br>
       Beat all three levels to unlock the <b>Endless Level</b> — how high can you score?</p>
       <button class="big-btn" id="ov-btn">▶ START</button>
     </div>
@@ -166,10 +166,10 @@
      lives also restarts him at the start of that same level (never Level 1
      if he was further on).
    - 3 lives, shown in a clean golden-yellow bar split into 3 sections.
-   - Every 3 bananas earns a life back, and the game counts out loud
-     on screen (1! 2! 3!) so collecting is a tiny counting lesson.
+   - Every 5 bananas earns a life back, and the game counts out loud
+     on screen (1! 2! 3! 4! 5!) so collecting is a tiny counting lesson.
    - Lives are capped at 3 so the golden bar always tells the truth.
-     At full lives, every 3rd banana gives 30 bonus points instead.
+     At full lives, every 5th banana gives 50 bonus points instead.
    ============================================================ */
 
 const canvas = document.getElementById('game');
@@ -444,7 +444,7 @@ function loseLife() {
       player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
       cameraX = Math.max(0, player.safeX - 160);   // the one time the camera steps back: putting Minx back on his checkpoint platform after a splash
       startTimer = 40;
-      banner = { text: 'Splash! ' + lives + (lives === 1 ? ' life' : ' lives') + ' left', sub: 'Back to the last platform — keep going!', t: 110 };
+      banner = { text: 'Splash! ' + lives + (lives === 1 ? ' life' : ' lives') + ' left', sub: player.checkSet ? 'Back to the checkpoint — keep going!' : 'Back to the last platform — keep going!', t: 110 };
     }
     return;
   }
@@ -467,18 +467,18 @@ function collectBanana(b) {
   if (level.endless) runBananas++;
   totalBananas++;
   bank++; save('minxBank', bank);   // every banana also fills the Banana Bank for the shop
-  const countInThree = ((totalBananas - 1) % 3) + 1;   // 1, 2, 3, 1, 2, 3… the counting lesson
+  const countInFive = ((totalBananas - 1) % 5) + 1;   // 1, 2, 3, 4, 5, 1, 2… the counting lesson (Finbar: FIVE bananas = a life now)
   score += 10;
-  popups.push({ x: b.x + 10, y: b.y - 8, text: countInThree + '!', t: 55, color: '#ffd83d' });
-  sfx.banana(countInThree);
-  if (countInThree === 3) {
+  popups.push({ x: b.x + 10, y: b.y - 8, text: countInFive + '!', t: 55, color: '#ffd83d' });
+  sfx.banana(countInFive);
+  if (countInFive === 5) {
     if (lives < 3) {
       lives++;
-      popups.push({ x: player.x, y: player.y - 30, text: '3 bananas! +1 LIFE', t: 100, color: '#ff8a80' });
+      popups.push({ x: player.x, y: player.y - 30, text: '5 bananas! +1 LIFE', t: 100, color: '#ff8a80' });
       sfx.life();
     } else {
-      score += 30;
-      popups.push({ x: player.x, y: player.y - 30, text: '3 bananas! +30 points', t: 100, color: '#ffd83d' });
+      score += 50;
+      popups.push({ x: player.x, y: player.y - 30, text: '5 bananas! +50 points', t: 100, color: '#ffd83d' });
       sfx.life();
     }
   }
@@ -504,15 +504,27 @@ function completeLevel() {
 }
 
 /* ---------- the Endless Level ---------- */
+let nextCheckpointAt = 1500;   // endless checkpoints (Finbar): a flag every ~1700px becomes the splash respawn point
 function endlessPlatform(x, y, w) {
   level.platforms.push([x, y, w]);
   bananasLeft.push({ x: x + w / 2 - 11, y: y - 32, taken: false, bob: Math.random() * 6.28 });
+  if (x >= nextCheckpointAt) { level.checkpoints.push({ x: x + (w >> 1), px: x, py: y, pw: w, active: false }); nextCheckpointAt = x + 1700; }
   genLast = { x, y, w };
+}
+function genVineChain(n) {
+  // A chain of n vines in a row over one long creek crossing (Finbar):
+  // swing, let go, catch the next vine, swing again… then land.
+  const E = genLast.x + genLast.w;
+  for (let i = 0; i < n; i++) {
+    vines.push({ ax: E + 140 + i * 210, ay: 60, len: 260, angle: 0, t: Math.random() * 6.28 });
+    if (i < n - 1) bananasLeft.push({ x: E + 140 + i * 210 + 108, y: 296, taken: false, bob: Math.random() * 6.28 });   // a prize floating between vines
+  }
+  endlessPlatform(E + 140 + (n - 1) * 210 + 130, 350, 190);   // landing sits a touch lower/closer: a swinging monkey's feet hang below a 340 top
 }
 
 // The endless mix: ALL THREE level ideas, in a repeating pattern —
 // P = jumping platforms (Level 1), V = vine swing (Level 2), T = tree tunnel (Level 3).
-const GEN_PLAN = ['P', 'P', 'P', 'V', 'P', 'P', 'T', 'P', 'P', 'V', 'P', 'T', 'P', 'P'];
+const GEN_PLAN = ['P', 'P', 'C3', 'P', 'P', 'T', 'P', 'V', 'P', 'P', 'C5', 'P', 'T', 'P'];   // C3/C5 = vine CHAINS (Finbar): swing vine-to-vine-to-vine
 let genIdx = 0;
 
 function genTunnel() {
@@ -535,6 +547,7 @@ function genNext() {
   const last = genLast;
   const kind = GEN_PLAN[genIdx % GEN_PLAN.length]; genIdx++;
   if (kind === 'T') { genTunnel(); return; }
+  if (kind[0] === 'C') { genVineChain(parseInt(kind[1], 10)); return; }
   // MEDIUM DIFFICULTY RAMP (Finbar): the farther the run goes, the harder
   // it gets — but gently: wider gaps, bigger steps, longer vine crossings,
   // always inside what Minx's jump can actually do.
@@ -559,6 +572,7 @@ function ensureEndless() {
     level.grounds = level.grounds.filter(g => g[0] + g[1] > cameraX - 400);
     level.ceilings = level.ceilings.filter(c => c[0] + c[1] > cameraX - 400);
     level.trunks = level.trunks.filter(t => t[1] > cameraX - 400);
+    level.checkpoints = level.checkpoints.filter(cp => cp.x > cameraX - 400 || cp === player.checkpointRef);   // never prune the checkpoint Minx would respawn at
     bananasLeft = bananasLeft.filter(b => b.x > cameraX - 400);
     vines = vines.filter(v => v.ax > cameraX - 500);
   }
@@ -566,13 +580,14 @@ function ensureEndless() {
 
 function startEndless() {
   levelIndex = 3;
-  level = { name: 'LEVEL 4 — ENDLESS RUN', intro: 'No finish line — platforms, vines AND tree tunnels, all mixed together. And it gets trickier the farther you go!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], ceilings: [], trunks: [], goalX: Infinity, goalY: -9999, endless: true };
+  level = { name: 'LEVEL 4 — ENDLESS RUN', intro: 'No finish line — platforms, vines AND tree tunnels, all mixed together. Reach a checkpoint flag and a splash sends you back there. And it gets trickier the farther you go!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], ceilings: [], trunks: [], checkpoints: [], goalX: Infinity, goalY: -9999, endless: true };
   lives = 3; runBananas = 0; bestBeatenShown = false;
   bananasLeft = []; vines = []; particles = [];
   player.x = 40; player.y = GROUND_Y - player.h;
   player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
   player.safeX = 40; player.safeY = player.y;
   genIdx = 0; genLast = { x: 0, y: GROUND_Y, w: 420 };   // the start ground acts as the "last platform"
+  nextCheckpointAt = 1500; player.checkSet = false; player.checkpointRef = null;
   cameraX = 0; popups = [];
   ensureEndless();
   startTimer = 45;
@@ -837,9 +852,10 @@ function update() {
     if (jumpPressed) {                                    // the JUMP button lets go — with a soft, gentle push…
       const dxPerFrame = Math.cos(v.angle) * v.len * 0.62 * Math.cos(v.t) * 0.022;
       player.vx = dxPerFrame * 1.7;
-      player.vy = -3.2;
+      player.vy = -5.6;   // a hop off the vine — enough air to fly vine-to-vine in a chain — enough air to reach the next vine in a chain
       player.swinging = null;
-      player.grabCooldown = 50;                           // …and he can't grab straight back on, so letting go really works
+      player.grabCooldown = 50;                           // …and he can't grab THAT vine straight back on, so letting go really works
+      player.noGrabVine = v;                              // (a DIFFERENT vine can be grabbed right away — that's how vine chains work)
       sfx.swing();
     }
     jumpPressed = false;
@@ -849,8 +865,11 @@ function update() {
     const goL = keys['arrowleft'] || keys['a'] || touchL;
     const goR = keys['arrowright'] || keys['d'] || touchR;
     if (player.swinging) { /* handled in the swinging branch */ }
-    else if (goL && !goR) { player.vx = -MOVE; player.face = -1; }
-    else if (goR && !goL) { player.vx = MOVE; player.face = 1; }
+    else if (goL && !goR) { player.face = -1; if (player.onGround) player.vx = -MOVE; else if (player.vx > 0.4) player.vx *= 0.86; else if (player.vx > -MOVE) player.vx = -MOVE; }
+    else if (goR && !goL) { player.face = 1; if (player.onGround) player.vx = MOVE; else if (player.vx < -0.4) player.vx *= 0.86; else if (player.vx < MOVE) player.vx = MOVE; }
+    // (air rule: holding a direction never SLOWS Minx below his launch
+    // momentum — a vine fling keeps its speed, which vine chains need;
+    // holding the opposite way brakes gently instead)
     else if (player.onGround) player.vx = 0;         // standing still on a surface
     // (in the air with no key held, he keeps his momentum — jumping feels natural)
 
@@ -876,11 +895,11 @@ function update() {
     for (const s of solids()) {
       const overlapX = player.x + player.w > s.x + 4 && player.x < s.x + s.w - 4;
       const bottom = player.y + player.h;
-      if (overlapX && player.vy >= 0 && prevBottom <= s.y + 1 && bottom >= s.y) {
+      if (overlapX && player.vy >= 0 && prevBottom <= s.y + 12 && bottom >= s.y) {   // +12 = a step-up assist: if his feet are just below a top while falling (e.g. letting go of a vine at the bottom of its swing), he still steps up onto it instead of sliding past
         player.y = s.y - player.h;
         player.vy = 0;
         player.onGround = true;
-        if (s.ground || level.endless) { player.safeX = player.x; player.safeY = player.y; }   // in the endless run, every platform is a checkpoint
+        if (s.ground || (level.endless && !player.checkSet)) { player.safeX = player.x; player.safeY = player.y; }   // endless: platforms are safe spots UNTIL the first checkpoint flag — after that, only flags count
       }
     }
 
@@ -902,7 +921,7 @@ function update() {
     // rope end, he catches it. A big, forgiving target for kids, and the
     // vine keeps its own gentle rhythm (its phase is NOT reset on a grab).
     for (const v of vines) {
-      if (player.grabCooldown > 0) break;                 // just let go of a vine — fly free for a moment first
+      if (player.grabCooldown > 0 && v === player.noGrabVine) continue;   // just let go of THIS vine — fly free; other vines are fair game
       const endX = v.ax + Math.sin(v.angle) * v.len;
       const endY = v.ay + Math.cos(v.angle) * v.len;
       const handX = player.x + player.w / 2, handY = player.y + 6;
@@ -912,6 +931,19 @@ function update() {
         player.swinging = v; sfx.swing();
         popups.push({ x: player.x, y: player.y - 24, text: 'SPACE to let go!', t: 70, color: '#ffffff' });
         break;
+      }
+    }
+
+    // Endless CHECKPOINTS (Finbar): running past a flag plants Minx's
+    // respawn there. A splash then returns him to the flag, not the start.
+    if (level.endless && level.checkpoints) {
+      for (const cp of level.checkpoints) {
+        if (!cp.active && player.onGround && player.x + player.w >= cp.x && player.x <= cp.x && Math.abs(player.y + player.h - cp.py) < 3) {
+          cp.active = true; player.checkSet = true; player.checkpointRef = cp;
+          player.safeX = cp.px + 24; player.safeY = cp.py - player.h;
+          popups.push({ x: cp.x - 20, y: cp.py - 64, text: 'CHECKPOINT!', t: 90, color: '#ffd83d' });
+          sfx.life();
+        }
       }
     }
 
@@ -1245,6 +1277,13 @@ function drawWorld() {
     // roots flaring out at the base, like a real tree gripping the ground
     px(tx0 - 22, 366, 40, 18, '#5d4037'); px(tx0 - 14, 350, 26, 18, '#5d4037'); px(tx0 - 26, 378, 48, 8, '#4e342e');
     px(tx1 - 18, 366, 40, 18, '#5d4037'); px(tx1 - 12, 350, 26, 18, '#5d4037'); px(tx1 - 22, 378, 48, 8, '#4e342e');
+    // EARTH FOUNDATION (Finbar): a solid bank of land running under the
+    // WHOLE tunnel tree, so the giant tree visibly stands on land. The
+    // creek gaps inside the tunnel become shallow ditches in solid earth
+    // instead of see-through holes between floating floor strips.
+    px(tx0 - 18, GROUND_Y + 26, tw + 36, H - GROUND_Y - 26, '#6d4c2f');
+    px(tx0 - 18, GROUND_Y + 26, tw + 36, 6, '#5d4037');
+    for (let dx = 26; dx < tw + 10; dx += 58) px(tx0 - 18 + dx, GROUND_Y + 44 + ((tr[0] + dx * 7) % 12), 11, 6, '#795548');
   }
   // hanging roots inside tunnels (the bonk hazards) — drawn wherever a level has them
   for (const c of (level.ceilings || [])) {
@@ -1278,6 +1317,14 @@ function drawWorld() {
     px(sx + 14, p[1] - 3, 34, 4, '#43a047');              // moss on top
     px(sx + p[2] - 52, p[1] - 3, 26, 4, '#388e3c');
     px(sx + 30, p[1] + 13, 18, 5, '#2e7d32');             // moss dripping underneath
+  }
+  // endless checkpoint flags: green until Minx reaches them, then gold
+  for (const cp of (level.checkpoints || [])) {
+    const sx = cp.x - cameraX; if (sx < -30 || sx > W + 30) continue;
+    px(sx - 5, cp.py - 3, 12, 3, '#5d4037');
+    px(sx - 1, cp.py - 38, 3, 36, '#795548');
+    const fc = cp.active ? '#ffd83d' : '#43a047';
+    px(sx + 2, cp.py - 38, 15, 10, fc); px(sx + 2, cp.py - 28, 10, 5, fc);
   }
   // vines — drawn as stepped pixel blocks, not a smooth line
   for (const v of vines) {
@@ -1377,7 +1424,7 @@ function drawBanana(x, y) {
   ];
   for (let r = 0; r < ROWS.length; r++)
     for (const run of ROWS[r]) px(x + run[0], y + r, run[1] - run[0], 1, '#ffd83d');
-  px(x + 3, y, 2, 3, '#6d4c2f');   // the stem cap on the top-left end
+  px(x + 3, y - 3, 3, 6, '#6d4c2f');   // the stem on the top-left end (Finbar: longer)
 }
 function drawMonkey() {
   const x = player.x - cameraX;
