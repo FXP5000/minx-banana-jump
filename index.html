@@ -959,7 +959,9 @@ function barkTexture(x, y, w, h, seed) {
       px(gx + off, gy, 3, 9, '#4e342e');
     }
   }
-  for (let gx = x + 10 + (seed % 5); gx < x + w - 3; gx += 22) px(gx, y + 3, 2, Math.max(2, h - 6), '#8d6e63');   // light ridges
+  for (let gx = x + 10 + (seed % 5); gx < x + w - 3; gx += 22) {          // light ridges — as lots of LITTLE broken dashes, never one long line
+    for (let gy = y + 4; gy < y + h - 8; gy += 12) px(gx + (((gy - y) * 7 + seed) % 3) - 1, gy, 2, 7, '#8d6e63');
+  }
   const flecks = Math.floor(w * h / 900);
   for (let f = 0; f < flecks; f++) {                                       // little bark flecks
     px(x + ((seed * 31 + f * 47) % Math.max(4, w - 6)), y + ((seed * 17 + f * 29) % Math.max(4, h - 6)), 3, 2, '#795548');
@@ -993,53 +995,80 @@ function drawBackground() {
   // near trees, so the jungle feels deep — and in the GAPS between the
   // near trees you can spot bushes and animals living back there. ----
   const farFloor = GROUND_Y - 30;
-  for (let i = 0; i < 8; i++) {   // far tree silhouettes, slower parallax = farther away
-    const fx = ((i * 128 - cameraX * 0.38) % (W + 180) + W + 180) % (W + 180) - 90;
-    px(fx + 30, 216, 10, farFloor - 206, '#2a1f14');
-    blob(fx + 35, 192, 54, '#16351a'); blob(fx + 2, 214, 36, '#1d4020'); blob(fx + 68, 212, 38, '#143017');
+  // FAINT BUSHES far back (Finbar): soft, low-contrast leafy mounds sitting
+  // on the far floor — atmosphere, not shadow trees.
+  for (let i = 0; i < 11; i++) {
+    const bx2 = ((i * 88 + 30 - cameraX * 0.42) % (W + 160) + W + 160) % (W + 160) - 80;
+    blob(bx2 + 22, farFloor - 8, 24 + (i % 3) * 5, i % 2 ? '#173d1c' : '#1a4520');
+    blob(bx2 + 4, farFloor - 4, 14, '#173d1c'); blob(bx2 + 40, farFloor - 4, 15, '#1a4520');
   }
-  for (let i = 0; i < 6; i++) {   // life in the gaps: one bush or animal per stretch of far forest
+  // LIFE IN THE GAPS (Finbar): bushes and jungle animals living in the far
+  // forest, visible between the near trees. Each WORLD cell keeps its own
+  // animal (hashed from the cell's world position), so nothing visibly
+  // repeats as you travel — new gaps bring new animals.
+  for (let i = 0; i < 7; i++) {
     const gx = ((i * 173 + 60 - cameraX * 0.42) % (W + 240) + W + 240) % (W + 240) - 120;
     if (gx < -70 || gx > W + 40) continue;
-    const hsh = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
-    const twitch = Math.round(Math.sin(Date.now() / 600 + i * 2.2) * 1);   // tiny smooth ear/head movements
-    if (hsh < 0.30) {           // a leafy bush with berries
+    const cellId = Math.round((gx + cameraX * 0.42 - 60) / 173);
+    const hsh = Math.abs(Math.sin(cellId * 12.9898) * 43758.5453) % 1;
+    const twitch = Math.round(Math.sin(Date.now() / 600 + cellId * 2.2) * 1);
+    if (hsh < 0.16) {           // just a faint bush here
+      blob(gx + 24, farFloor - 10, 22, '#1d4020'); blob(gx + 8, farFloor - 5, 13, '#24512a'); blob(gx + 40, farFloor - 5, 13, '#1d4020');
+    } else if (hsh < 0.30) {    // a leafy bush with berries
       blob(gx + 24, farFloor - 14, 26, '#1d4020'); blob(gx + 6, farFloor - 8, 17, '#24512a'); blob(gx + 42, farFloor - 8, 17, '#1d4020');
       px(gx + 14, farFloor - 20, 4, 4, '#e53935'); px(gx + 30, farFloor - 12, 4, 4, '#e53935'); px(gx + 22, farFloor - 26, 4, 4, '#ff80ab');
-    } else if (hsh < 0.52) {    // a TOUCAN on a branch (jungle bird!)
-      px(gx + 2, farFloor - 34, 46, 5, '#5d4037');                          // branch
-      px(gx + 8, farFloor - 29, 10, 5, '#2e7d32'); px(gx + 34, farFloor - 29, 9, 5, '#388e3c');   // leaves on the branch
-      px(gx + 18, farFloor - 48, 15, 20, '#263238');                        // black body
-      px(gx + 20, farFloor - 44, 10, 10, '#eceff1');                        // white throat
-      px(gx + 31, farFloor - 47 + twitch, 17, 6, '#ffb300');                 // the huge beak, golden...
-      px(gx + 42, farFloor - 47 + twitch, 6, 6, '#e53935');                  // ...with a red tip
-      px(gx + 27, farFloor - 45 + twitch, 3, 3, '#4fc3f7');                  // bright blue eye ring
-      px(gx + 12, farFloor - 38, 7, 12, '#37474f');                         // tail feathers
-      px(gx + 21, farFloor - 29, 3, 5, '#ffb300'); px(gx + 27, farFloor - 29, 3, 5, '#ffb300');   // feet gripping
-    } else if (hsh < 0.72) {    // a JAGUAR sitting in the shade (jungle cat!)
-      px(gx + 14, farFloor - 13, 30, 13, '#f9a825');                       // body
-      px(gx + 6, farFloor - 8, 12, 5, '#f9a825'); px(gx + 3, farFloor - 12, 6, 8, '#f9a825');     // curled tail
-      px(gx + 38, farFloor - 27 + twitch, 16, 16, '#fbc02d');               // head
-      px(gx + 39, farFloor - 31 + twitch, 5, 6, '#f9a825'); px(gx + 48, farFloor - 31 + twitch, 5, 6, '#f9a825');  // ears
-      px(gx + 49, farFloor - 18 + twitch, 6, 6, '#ffe082');                 // muzzle
-      px(gx + 44, farFloor - 22 + twitch, 3, 3, '#263238');                 // eye
-      px(gx + 18, farFloor - 11, 4, 3, '#4e342e'); px(gx + 28, farFloor - 8, 4, 3, '#4e342e'); px(gx + 23, farFloor - 13, 3, 3, '#4e342e'); px(gx + 42, farFloor - 25 + twitch, 3, 3, '#4e342e');  // spots!
-      px(gx + 18, farFloor - 3, 6, 3, '#e65100'); px(gx + 32, farFloor - 3, 6, 3, '#e65100');    // paws
-    } else if (hsh < 0.88) {    // a SLOTH hanging from a branch, as slow as can be
-      px(gx + 2, farFloor - 46, 48, 5, '#5d4037');                          // branch
-      px(gx + 36, farFloor - 41, 9, 5, '#2e7d32');                          // leaf tuft
-      px(gx + 12, farFloor - 41, 4, 12, '#8d6e63'); px(gx + 36, farFloor - 41, 4, 12, '#8d6e63');   // long arms up to the branch
-      px(gx + 12, farFloor - 32, 28, 17, '#a1887f');                        // round hanging body
-      px(gx + 17, farFloor - 27 + twitch, 15, 13, '#d7ccc8');               // pale face
-      px(gx + 18, farFloor - 23 + twitch, 4, 3, '#5d4037'); px(gx + 27, farFloor - 23 + twitch, 4, 3, '#5d4037');   // eye patches
-      px(gx + 22, farFloor - 19 + twitch, 5, 3, '#4e342e');                 // nose + smile line
-      px(gx + 15, farFloor - 15, 4, 6, '#8d6e63'); px(gx + 33, farFloor - 15, 4, 6, '#8d6e63');     // dangling legs
+    } else if (hsh < 0.44) {    // a TOUCAN on a branch
+      px(gx + 2, farFloor - 34, 46, 5, '#5d4037');
+      px(gx + 8, farFloor - 29, 10, 5, '#2e7d32'); px(gx + 34, farFloor - 29, 9, 5, '#388e3c');
+      px(gx + 18, farFloor - 48, 15, 20, '#263238');
+      px(gx + 20, farFloor - 44, 10, 10, '#eceff1');
+      px(gx + 31, farFloor - 47 + twitch, 17, 6, '#ffb300');
+      px(gx + 42, farFloor - 47 + twitch, 6, 6, '#e53935');
+      px(gx + 27, farFloor - 45 + twitch, 3, 3, '#4fc3f7');
+      px(gx + 12, farFloor - 38, 7, 12, '#37474f');
+      px(gx + 21, farFloor - 29, 3, 5, '#ffb300'); px(gx + 27, farFloor - 29, 3, 5, '#ffb300');
+    } else if (hsh < 0.56) {    // a scarlet MACAW on a branch
+      px(gx + 2, farFloor - 32, 46, 5, '#5d4037');
+      px(gx + 30, farFloor - 27, 10, 5, '#2e7d32');
+      px(gx + 18, farFloor - 48, 14, 19, '#e53935');
+      px(gx + 22, farFloor - 42, 10, 12, '#1e88e5');
+      px(gx + 24, farFloor - 30, 5, 16, '#1e88e5'); px(gx + 29, farFloor - 30, 4, 13, '#e53935');
+      px(gx + 30, farFloor - 47 + twitch, 8, 8, '#eceff1');
+      px(gx + 36, farFloor - 46 + twitch, 7, 5, '#ffecb3');
+      px(gx + 32, farFloor - 44 + twitch, 3, 3, '#263238');
+      px(gx + 21, farFloor - 29, 3, 4, '#78909c'); px(gx + 27, farFloor - 29, 3, 4, '#78909c');
+    } else if (hsh < 0.70) {    // a JAGUAR sitting in the shade
+      px(gx + 14, farFloor - 13, 30, 13, '#f9a825');
+      px(gx + 6, farFloor - 8, 12, 5, '#f9a825'); px(gx + 3, farFloor - 12, 6, 8, '#f9a825');
+      px(gx + 38, farFloor - 27 + twitch, 16, 16, '#fbc02d');
+      px(gx + 39, farFloor - 31 + twitch, 5, 6, '#f9a825'); px(gx + 48, farFloor - 31 + twitch, 5, 6, '#f9a825');
+      px(gx + 49, farFloor - 18 + twitch, 6, 6, '#ffe082');
+      px(gx + 44, farFloor - 22 + twitch, 3, 3, '#263238');
+      px(gx + 18, farFloor - 11, 4, 3, '#4e342e'); px(gx + 28, farFloor - 8, 4, 3, '#4e342e'); px(gx + 23, farFloor - 13, 3, 3, '#4e342e'); px(gx + 42, farFloor - 25 + twitch, 3, 3, '#4e342e');
+      px(gx + 18, farFloor - 3, 6, 3, '#e65100'); px(gx + 32, farFloor - 3, 6, 3, '#e65100');
+    } else if (hsh < 0.82) {    // a SLOTH hanging from a branch
+      px(gx + 2, farFloor - 46, 48, 5, '#5d4037');
+      px(gx + 36, farFloor - 41, 9, 5, '#2e7d32');
+      px(gx + 12, farFloor - 41, 4, 12, '#8d6e63'); px(gx + 36, farFloor - 41, 4, 12, '#8d6e63');
+      px(gx + 12, farFloor - 32, 28, 17, '#a1887f');
+      px(gx + 17, farFloor - 27 + twitch, 15, 13, '#d7ccc8');
+      px(gx + 18, farFloor - 23 + twitch, 4, 3, '#5d4037'); px(gx + 27, farFloor - 23 + twitch, 4, 3, '#5d4037');
+      px(gx + 22, farFloor - 19 + twitch, 5, 3, '#4e342e');
+      px(gx + 15, farFloor - 15, 4, 6, '#8d6e63'); px(gx + 33, farFloor - 15, 4, 6, '#8d6e63');
+    } else if (hsh < 0.92) {    // a CAPYBARA by the water (the jungle's gentle giant)
+      px(gx + 2, farFloor - 3, 52, 3, '#4fc3f7');
+      px(gx + 10, farFloor - 19, 34, 17, '#795548');
+      px(gx + 38, farFloor - 23 + twitch, 17, 14, '#8d6e63');
+      px(gx + 41, farFloor - 27 + twitch, 5, 5, '#795548');
+      px(gx + 48, farFloor - 19 + twitch, 3, 3, '#263238');
+      px(gx + 50, farFloor - 14 + twitch, 4, 3, '#5d4037');
+      px(gx + 13, farFloor - 4, 5, 4, '#5d4037'); px(gx + 36, farFloor - 4, 5, 4, '#5d4037');
     } else {                    // two tree frogs on a leaf by a tiny pond
-      px(gx + 6, farFloor - 3, 44, 3, '#4fc3f7');                           // pond glint
-      px(gx + 12, farFloor - 6, 20, 4, '#2e7d32');                          // leaf
-      px(gx + 15, farFloor - 13, 12, 8, '#43a047'); px(gx + 16, farFloor - 17, 4, 5, '#43a047'); px(gx + 23, farFloor - 17, 4, 5, '#43a047');  // frog + eye bumps
+      px(gx + 6, farFloor - 3, 44, 3, '#4fc3f7');
+      px(gx + 12, farFloor - 6, 20, 4, '#2e7d32');
+      px(gx + 15, farFloor - 13, 12, 8, '#43a047'); px(gx + 16, farFloor - 17, 4, 5, '#43a047'); px(gx + 23, farFloor - 17, 4, 5, '#43a047');
       px(gx + 17, farFloor - 16, 2, 2, '#263238'); px(gx + 24, farFloor - 16, 2, 2, '#263238');
-      px(gx + 34, farFloor - 10, 8, 5, '#66bb6a');                           // little frog
+      px(gx + 34, farFloor - 10, 8, 5, '#66bb6a');
     }
   }
   // a thicket of trunks below the canopy, packed across the screen
