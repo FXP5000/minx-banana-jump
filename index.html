@@ -58,7 +58,8 @@
       <p id="ov-text">Help Minx the monkey collect bananas!<br>
       Minx <b>runs forward all by himself</b> — you just press <b>SPACE</b> (or tap) to jump.<br>
       Level 1 is just jumping. Level 2 adds swinging vines.<br>
-      Every <b>3 bananas = 1 extra life</b>. Count along: 1, 2, 3!</p>
+      Every <b>3 bananas = 1 extra life</b>. Count along: 1, 2, 3!<br>
+      Beat both levels to unlock the <b>🌴 Endless Level</b> — how high can you score?</p>
       <button class="big-btn" id="ov-btn">▶ START</button>
     </div>
   </div>
@@ -235,6 +236,13 @@ let state = 'title';            // title | playing | levelComplete | gameOver | 
 let levelIndex = 0;
 let level = LEVELS[0];
 let lives = 3, score = 0, totalBananas = 0;
+// Endless Level (unlocked after Level 2): a run that never ends, scored
+// separately, with the best score remembered between visits.
+let runBananas = 0, genSeg = 0, genLast = null, bestBeatenShown = false;
+let endlessBest = 0;
+try { endlessBest = +localStorage.getItem('minxEndlessBest') || 0; } catch (e) { /* private mode etc. — best just won't persist */ }
+function endlessScore() { return runBananas * 10 + Math.floor(player.x / 50); }
+function saveBest() { try { localStorage.setItem('minxEndlessBest', endlessBest); } catch (e) {} }
 let levelStart = { bananas: 0, score: 0 };   // totals when the current level began — restored on a level restart, so bananas never double-count
 let startTimer = 0;                          // short "get ready" pause before Minx starts auto-running
 let cameraX = 0;
@@ -291,6 +299,7 @@ function newGame() {
 }
 
 function restartCurrentLevel() {
+  if (level.endless) { startEndless(); return; }   // R in the endless run = a fresh run
   // Back to the START of the level Minx is in, with that level's bananas
   // back in place and the totals rewound to when the level began.
   totalBananas = levelStart.bananas;
@@ -304,6 +313,22 @@ function loseLife() {
   spawnParticles(player.x + 17, WATER_Y + 4, '#e1f5fe', 6, 3, 3.5);
   lives--;
   sfx.fall();
+  if (level.endless) {
+    // Endless rules: a splash sends Minx back to the last platform he stood
+    // on (not the very start); the run only ends when his lives run out.
+    if (lives <= 0) {
+      state = 'gameOver';
+      showOverlay('🏁 RUN OVER!',
+        `What a run!<br>🏆 Your score: <b>${endlessScore()}</b> &nbsp;•&nbsp; Best: <b>${endlessBest}</b><br>Bananas this run: <b>${runBananas}</b> &nbsp;•&nbsp; Distance: <b>${Math.floor(player.x / 50)}m</b>`,
+        '↻ RUN AGAIN', () => startEndless());
+    } else {
+      player.x = player.safeX; player.y = player.safeY;
+      player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
+      startTimer = 40;
+      banner = { text: '💦 Splash! ' + lives + (lives === 1 ? ' life' : ' lives') + ' left', sub: 'Back to the last platform — keep going!', t: 110 };
+    }
+    return;
+  }
   if (lives <= 0) {
     state = 'gameOver';
     showOverlay('GAME OVER',
@@ -320,6 +345,7 @@ function collectBanana(b) {
   b.taken = true;
   spawnParticles(b.x + 11, b.y + 11, '#ffd83d', 7, 3, 3);
   spawnParticles(b.x + 11, b.y + 11, '#fff59d', 4, 2, 2);
+  if (level.endless) runBananas++;
   totalBananas++;
   const countInThree = ((totalBananas - 1) % 3) + 1;   // 1, 2, 3, 1, 2, 3… the counting lesson
   score += 10;
@@ -348,9 +374,57 @@ function completeLevel() {
   } else {
     state = 'win';
     showOverlay('🏆 YOU WIN!',
-      `Minx made it through the whole jungle!<br>You collected <b>${totalBananas} bananas</b> and scored <b>${score}</b>.<br>Counting star: 3 bananas = 1 extra life. You did it!`,
-      '↻ PLAY AGAIN', newGame);
+      `Minx made it through the whole jungle!<br>You collected <b>${totalBananas} bananas</b> and scored <b>${score}</b>.<br>🆕 <b>Unlocked: the Endless Level!</b> No finish line — run as far as you can and chase the high score!`,
+      '🌴 PLAY THE ENDLESS LEVEL', () => startEndless());
   }
+}
+
+/* ---------- the Endless Level ---------- */
+function endlessPlatform(x, y, w) {
+  level.platforms.push([x, y, w]);
+  bananasLeft.push({ x: x + w / 2 - 11, y: y - 32, taken: false, bob: Math.random() * 6.28 });
+  genLast = { x, y, w };
+}
+
+function genNext() {
+  const last = genLast; genSeg++;
+  if (genSeg % 6 === 5) {
+    // every 6th gap is a vine gap: swing across to a landing platform
+    vines.push({ ax: last.x + last.w + 140, ay: 60, len: 260, angle: 0, t: Math.random() * 6.28 });
+    endlessPlatform(last.x + last.w + 280, 340, 190);
+  } else {
+    const dy = [-42, 0, 42, 0][Math.floor(Math.random() * 4)];
+    const y = Math.max(202, Math.min(338, last.y + dy));
+    endlessPlatform(last.x + last.w + 82, y, 180);   // same friendly gaps as Levels 1–2
+  }
+}
+
+function ensureEndless() {
+  if (!level.endless) return;
+  while (genLast.x < player.x + W + 700) genNext();
+  if (cameraX > 600) {   // tidy up what's far behind, so the run can go forever
+    level.platforms = level.platforms.filter(p => p[0] + p[2] > cameraX - 400);
+    bananasLeft = bananasLeft.filter(b => b.x > cameraX - 400);
+    vines = vines.filter(v => v.ax > cameraX - 500);
+  }
+}
+
+function startEndless() {
+  levelIndex = 2;
+  level = { name: '🌴 LEVEL 3 — ENDLESS RUN', intro: 'No finish line — how far can Minx go? Chase the high score!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], goalX: Infinity, goalY: -9999, endless: true };
+  lives = 3; runBananas = 0; bestBeatenShown = false;
+  bananasLeft = []; vines = []; particles = [];
+  player.x = 40; player.y = GROUND_Y - player.h;
+  player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
+  player.safeX = 40; player.safeY = player.y;
+  genSeg = 0; genLast = { x: 0, y: GROUND_Y, w: 420 };   // the start ground acts as the "last platform"
+  cameraX = 0; popups = [];
+  ensureEndless();
+  startTimer = 45;
+  banner = { text: level.name, sub: level.intro, t: 130 };
+  state = 'playing';
+  overlay.classList.add('hidden');
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 
 function showOverlay(title, html, btnLabel, onClick) {
@@ -363,7 +437,7 @@ function showOverlay(title, html, btnLabel, onClick) {
 ovBtn.onclick = newGame;
 
 /* ---------- physics & update ---------- */
-const GRAV = 0.6, MOVE = 3.4, JUMP = -11;   // Minx's ORIGINAL speed (Finbar asked for it back) — the game is made easier by the platforms instead: they are now much wider and spread way out, with smaller height steps
+const GRAV = 0.6, MOVE = 3.4, JUMP = -11;   // Minx's ORIGINAL speed — now truly constant thanks to the fixed 60-steps-per-second loop below; the game is made easier by wide, spread-out platforms with smaller height steps
 
 function solids() {
   const list = [];
@@ -379,6 +453,14 @@ function update() {
   popups = popups.filter(p => --p.t > 0);
   stepParticles();
   if (player.grabCooldown > 0) player.grabCooldown--;
+  ensureEndless();
+  if (level.endless) {   // keep the high score up to date, live
+    const sc = endlessScore();
+    if (sc > endlessBest) {
+      if (!bestBeatenShown && endlessBest > 0) { banner = { text: '🏆 NEW BEST!', sub: 'You beat the high score — keep going!', t: 90 }; bestBeatenShown = true; sfx.life(); }
+      endlessBest = sc; saveBest();
+    }
+  }
 
   // Vines swing OUT FAR all the time (wide arc, slow and gentle), so the rope
   // end sweeps toward Minx as he runs up — much easier to jump onto.
@@ -427,7 +509,7 @@ function update() {
         player.y = s.y - player.h;
         player.vy = 0;
         player.onGround = true;
-        if (s.ground) { player.safeX = player.x; player.safeY = player.y; }
+        if (s.ground || level.endless) { player.safeX = player.x; player.safeY = player.y; }   // in the endless run, every platform is a checkpoint
       }
     }
 
@@ -501,7 +583,7 @@ function drawBackground() {
     ctx.beginPath(); ctx.arc(tx + 6, 232, 34, 0, 6.29); ctx.fill();
   }
   // dense bushes along the floor behind the play area
-  for (let wx = 10; wx < level.world; wx += 84) {
+  for (let wx = Math.floor(cameraX / 84) * 84 - 84; wx < cameraX + W + 84; wx += 84) {   // camera-bounded (works for the endless world too)
     const sx = wx - cameraX; if (sx < -90 || sx > W + 40) continue;
     px(sx, GROUND_Y - 26, 62, 28, '#1b5e20');
     px(sx + 9, GROUND_Y - 38, 42, 16, '#2e7d32');
@@ -524,7 +606,7 @@ function drawWorld() {
     ctx.fillRect(sx + 20, WATER_Y + 21, 13, 3);
   }
   // pebbles and stones along the creek (world-anchored, some half in the water) — with moss on top
-  for (let wx = 24; wx < level.world; wx += 150) {
+  for (let wx = Math.floor(cameraX / 150) * 150 + 24; wx < cameraX + W + 60; wx += 150) {
     const sx = wx - cameraX; if (sx < -40 || sx > W + 20) continue;
     px(sx, WATER_Y - 3, 28, 9, '#90a4ae');
     px(sx + 6, WATER_Y - 6, 15, 5, '#b0bec5');
@@ -533,7 +615,7 @@ function drawWorld() {
     px(sx + 46, WATER_Y + 15, 9, 3, '#388e3c');           // moss on the small stone too
   }
   // fallen logs floating in the creek, with moss growing on them
-  for (let wx = 300; wx < level.world; wx += 340) {
+  for (let wx = Math.floor(cameraX / 340) * 340 + 300; wx < cameraX + W + 120; wx += 340) {
     const sx = wx - cameraX; if (sx < -110 || sx > W + 30) continue;
     px(sx, WATER_Y + 11, 84, 15, '#6d4c2f');
     px(sx, WATER_Y + 11, 84, 5, '#8d6e63');
@@ -552,7 +634,7 @@ function drawWorld() {
     }
   }
   // hanging jungle vines in the background (decoration only — the swinging ones come later)
-  for (let wx = 130; wx < level.world; wx += 210) {
+  for (let wx = Math.floor(cameraX / 210) * 210 + 130; wx < cameraX + W + 60; wx += 210) {
     const sx = wx - cameraX; if (sx < -20 || sx > W + 20) continue;
     px(sx, 44, 4, 74 + (wx % 3) * 18, '#1b5e20');
     px(sx - 5, 66, 12, 7, '#2e7d32'); px(sx - 4, 96, 10, 7, '#2e7d32');
@@ -705,8 +787,20 @@ function drawHUD() {
   ctx.fillText('3 = +1 life', 458, 28);
   // score + level, right side
   ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px "Courier New", monospace'; ctx.textAlign = 'right';
-  ctx.fillText('SCORE ' + score, W - 12, 29);
+  ctx.fillText(level.endless ? 'ENDLESS SCORE ' + endlessScore() : 'SCORE ' + score, W - 12, 29);
   ctx.textAlign = 'left';
+  if (level.endless) {
+    // 🏆 HIGH-SCORE BAR: a golden bar that fills up as this run's score
+    // climbs toward the best ever. Fill it completely to beat the best!
+    const sc = endlessScore();
+    ctx.fillStyle = '#ffd83d'; ctx.font = 'bold 12px "Courier New", monospace'; ctx.textAlign = 'right';
+    ctx.fillText('🏆 BEST ' + endlessBest, W - 12, 46 + 14);
+    ctx.textAlign = 'left';
+    const bx = W - 232, by = 66, bw = 220, bh = 11;
+    px(bx, by, bw, bh, '#3a3a3a');
+    px(bx, by, endlessBest ? Math.min(bw, bw * sc / endlessBest) : 0, bh, '#ffd83d');
+    ctx.strokeStyle = '#fff8dc'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, bw, bh); ctx.lineWidth = 1;
+  }
   ctx.fillStyle = '#b8e6a0'; ctx.font = '13px "Courier New", monospace';
   ctx.fillText(level.name, 12, 64);
 }
@@ -744,10 +838,21 @@ function draw() {
   }
 }
 
-function loop() {
-  update();
-  draw();
+// Fixed timestep: the game's physics always steps 60 times per second,
+// no matter how fast the screen refreshes. (Before this, screens with a
+// high refresh rate ran update() more often per second — and Minx
+// literally moved faster on them. Now his speed is the true original
+// speed everywhere.)
+let lastTime = 0, timeAcc = 0;
+function loop(ts) {
   requestAnimationFrame(loop);
+  if (!lastTime) lastTime = ts;
+  let dt = (ts - lastTime) / 1000;
+  lastTime = ts;
+  if (dt > 0.25) dt = 0.25;                 // tab was away — don't lurch
+  timeAcc += dt;
+  while (timeAcc >= 1 / 60) { update(); timeAcc -= 1 / 60; }
+  draw();
 }
 draw();
 requestAnimationFrame(loop);

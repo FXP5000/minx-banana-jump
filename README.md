@@ -34,6 +34,9 @@ Minx has a **running animation** (pumping legs and arms, a little bob) and a **j
 
 - **Level 1 — Little Hops:** Just jumping. Flat ground to start, a first platform that's a little hop up, then platforms over the water that gradually get higher and come back down, climbing at the end to the golden tree's platform. Bananas show the way.
 - **Level 2 — Vine Swings:** One new idea — vines. Like Level 1, the ground is only at the start, so there's no running underneath: platform clusters over the water are linked by vines. Swing gently across each vine gap to the landing platform on the other side, then climb to the golden tree's platform.
+- **Level 3 — Endless Run (unlocked by beating Level 2):** No finish line! The jungle generates itself ahead of Minx forever, with the same friendly platforms and a vine gap every so often. Score = bananas × 10 + metres run. A splash sends Minx back to the last platform he stood on; the run ends when his 3 lives run out. The **🏆 high-score bar at the top** fills up as your score climbs toward the best ever, and the best score is remembered between visits.
+
+The game also runs at a locked 60 steps per second, so Minx's speed is exactly the same on every screen — fast-refresh displays used to run him at double speed.
 
 ## Made with
 
