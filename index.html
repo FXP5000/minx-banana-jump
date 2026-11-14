@@ -560,36 +560,51 @@ if (!ownedHats.includes(hatId)) hatId = 'none';
 // Draws a hat/accessory with a rect painter P. In game pixels the monkey's
 // head spans ox+6..ox+28 and oy..oy+18 (see drawMonkey); previews reuse it.
 function drawHatOn(P, ox, oy, hat) {
+  // The head spans ox+6..ox+28 (centre ox+17) — every hat is centred on it.
   if (!hat || hat === 'none') return;
-  if (hat === 'cap') { P(ox + 4, oy - 3, 26, 7, '#e53935'); P(ox + 26, oy + 2, 11, 4, '#b71c1c'); P(ox + 14, oy - 6, 6, 4, '#b71c1c'); }
+  if (hat === 'cap') { P(ox + 5, oy - 3, 24, 7, '#e53935'); P(ox + 25, oy + 2, 11, 4, '#b71c1c'); P(ox + 14, oy - 6, 6, 4, '#b71c1c'); }
   else if (hat === 'flower') { P(ox + 25, oy + 1, 5, 5, '#f48fb1'); P(ox + 29, oy + 4, 5, 5, '#f48fb1'); P(ox + 25, oy + 7, 5, 5, '#f48fb1'); P(ox + 27, oy + 4, 4, 4, '#ffd83d'); }
   else if (hat === 'party') { P(ox + 9, oy - 4, 16, 5, '#8e24aa'); P(ox + 12, oy - 9, 10, 5, '#fdd835'); P(ox + 14, oy - 14, 6, 5, '#e53935'); P(ox + 15, oy - 18, 5, 5, '#ffd83d'); }
-  else if (hat === 'shades') { P(ox + 8, oy + 3, 18, 6, '#14141f'); P(ox + 6, oy + 4, 3, 3, '#14141f'); P(ox + 25, oy + 4, 3, 3, '#14141f'); }
-  else if (hat === 'banana') { P(ox + 2, oy - 5, 8, 4, '#ffd83d'); P(ox + 8, oy - 8, 16, 5, '#ffd83d'); P(ox + 22, oy - 5, 9, 4, '#ffd83d'); P(ox + 15, oy - 11, 4, 4, '#6d4c41'); }
+  else if (hat === 'shades') {
+    // Proper sunglasses: two lenses over the eyes, a bridge, arms, glints.
+    P(ox + 10, oy + 4, 6, 6, '#14141f'); P(ox + 18, oy + 4, 6, 6, '#14141f');
+    P(ox + 16, oy + 5, 2, 2, '#14141f');
+    P(ox + 7, oy + 5, 3, 2, '#14141f'); P(ox + 24, oy + 5, 3, 2, '#14141f');
+    P(ox + 11, oy + 5, 2, 2, '#7d8ea0'); P(ox + 19, oy + 5, 2, 2, '#7d8ea0');
+  }
+  else if (hat === 'banana') { P(ox + 4, oy - 5, 8, 4, '#ffd83d'); P(ox + 9, oy - 8, 16, 5, '#ffd83d'); P(ox + 22, oy - 5, 8, 4, '#ffd83d'); P(ox + 15, oy - 11, 4, 4, '#6d4c41'); }
   else if (hat === 'crown') { P(ox + 6, oy - 3, 22, 6, '#ffd83d'); P(ox + 6, oy - 8, 5, 6, '#ffd83d'); P(ox + 15, oy - 9, 5, 7, '#ffd83d'); P(ox + 23, oy - 8, 5, 6, '#ffd83d'); }
+}
+// ONE monkey figure, used by the menu previews AND matching the in-game
+// monkey exactly (same proportions as drawMonkey's standing pose) — so the
+// face, mouth and hats line up the same everywhere. (Finbar spotted that
+// the old previews had floating eyes, no mouths, and off-centre hats.)
+function drawMonkeyFigure(P, ox, oy, pal, hat) {
+  const tan = '#d7a679', eye = pal.eyes || '#212121';
+  P(ox - 4, oy + 20, 8, 5, pal.dark);                       // tail
+  P(ox + 6, oy + 32, 9, 8, pal.dark); P(ox + 20, oy + 32, 9, 8, pal.dark);   // legs
+  P(ox + 5, oy + 14, 24, 20, pal.fur);                      // body
+  P(ox + 11, oy + 18, 12, 13, tan);                         // belly
+  P(ox, oy + 16, 6, 14, pal.dark); P(ox + 28, oy + 16, 6, 14, pal.dark);     // arms
+  P(ox + 1, oy + 4, 6, 9, pal.fur); P(ox + 27, oy + 4, 6, 9, pal.fur);       // ears
+  P(ox + 6, oy, 22, 18, pal.fur);                           // head
+  P(ox + 10, oy + 8, 14, 10, tan);                          // face
+  P(ox + 12, oy + 5, 3, 3, eye); P(ox + 20, oy + 5, 3, 3, eye);              // eyes (on the face!)
+  P(ox + 15, oy + 13, 5, 2, '#212121');                     // mouth — every monkey has one
+  drawHatOn(P, ox, oy, hat);
 }
 function drawMonkeyPreview(c2, pal, hat) {
   const P = (x, y, w, h, c) => { c2.fillStyle = c; c2.fillRect(x, y, w, h); };
-  P(14, 32, 26, 20, pal.fur); P(20, 37, 14, 13, '#d7a679');
-  P(6, 42, 6, 10, pal.dark); P(42, 42, 6, 10, pal.dark);
-  P(7, 20, 7, 10, pal.fur); P(40, 20, 7, 10, pal.fur);
-  P(13, 14, 28, 22, pal.fur);
-  P(18, 24, 18, 12, '#d7a679');
-  P(21, 21, 4, 4, pal.eyes || '#212121'); P(31, 21, 4, 4, pal.eyes || '#212121');
-  P(24, 31, 6, 2, '#212121');
-  P(16, 50, 8, 6, pal.dark); P(30, 50, 8, 6, pal.dark);
-  drawHatOn(P, 7, 14, hat);
+  drawMonkeyFigure(P, 10, 20, pal, hat);
 }
 function drawHatPreview(c2, hat) {
   const P = (x, y, w, h, c) => { c2.fillStyle = c; c2.fillRect(x, y, w, h); };
-  P(13, 24, 28, 22, '#795548'); P(18, 34, 18, 12, '#d7a679');
-  P(21, 31, 4, 4, '#212121'); P(31, 31, 4, 4, '#212121');
-  drawHatOn(P, 7, 24, hat);
+  drawMonkeyFigure(P, 10, 20, CHARACTERS[0], hat);   // classic monkey wearing the hat
 }
 function shopButton(label, price, owned, selected, previewFn, onPick) {
   const b = document.createElement('button');
   b.className = 'char-btn' + (selected ? ' sel' : '');
-  const cv = document.createElement('canvas'); cv.width = 54; cv.height = 58;
+  const cv = document.createElement('canvas'); cv.width = 54; cv.height = 62;
   previewFn(cv.getContext('2d'));
   b.appendChild(cv);
   const d = document.createElement('div');
