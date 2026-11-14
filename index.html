@@ -36,7 +36,7 @@
     padding: 12px 30px; border-radius: 8px; letter-spacing: 1px;
   }
   .big-btn:active { transform: translateY(3px); border-bottom-width: 2px; }
-  #char-row, #hat-row { justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  #char-row, #hat-row, #daily-row { justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
   .char-btn { background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 12px; padding: 6px 6px 3px; cursor: pointer; color: #fff; font-family: inherit; font-size: 12px; }
   .char-btn:hover { background: rgba(255,255,255,0.18); }
   .char-btn.sel { border-color: #ffd83d; background: rgba(255,216,61,0.15); }
@@ -67,6 +67,8 @@
       Beat all three levels to unlock the <b>🌴 Endless Level</b> — how high can you score?</p>
       <div id="bank-line" style="display:none; font-size:19px; margin-top:10px;">🍌 Bank: <b id="bank-n">0</b> bananas</div>
       <div id="char-row" style="display:none"></div>
+      <div id="daily-label" style="display:none; font-size:15px; margin-top:8px;">🌟 SKIN OF THE DAY — a different one tomorrow!</div>
+      <div id="daily-row" style="display:none"></div>
       <div id="hat-row" style="display:none"></div>
       <button class="big-btn" id="ov-btn">▶ START</button>
     </div>
@@ -192,58 +194,61 @@ const LEVELS = [
   {
     name: 'Level 1 — Little Hops',
     intro: 'Move Minx with ◀ ▶ — jump with SPACE from platform to platform over the water!',
-    world: 3360,
+    world: 3160,
     grounds: [[0, 420]],                        // solid ground ONLY at the start…
-    platforms: [                                // …after that, platforms over the creek are the only way across — MUCH wider and spread WAY out, with gentle height steps, so every jump is easy
-      [170, 338, 180], [432, 296, 180], [694, 254, 180], [956, 296, 180], [1218, 338, 180],
-      [1480, 296, 180], [1742, 254, 180], [2004, 296, 180], [2266, 338, 180],
-      [2528, 296, 180], [2790, 254, 180], [3050, 212, 220],
+    platforms: [                                // …after that, platforms over the creek are the only way across.
+      // HARDER (Finbar): wider 102px gaps and bigger 56–70px steps up — still
+      // comfortably inside Minx's ~126px jump distance and ~100px jump height.
+      [502, 338, 180], [784, 282, 180], [1066, 338, 180], [1348, 268, 180],
+      [1630, 324, 180], [1912, 254, 180], [2194, 310, 180], [2476, 240, 180],
+      [2758, 240, 220],                         // the golden-tree platform (the finish)
     ],
     bananas: [
-      [248, 306], [510, 264], [772, 222], [1034, 264], [1296, 306],
-      [1558, 264], [1820, 222], [2082, 264], [2344, 306],
-      [2606, 264], [2868, 222], [3130, 180],
+      [581, 306], [863, 250], [1145, 306], [1427, 236], [1709, 292],
+      [1991, 222], [2273, 278], [2555, 208], [2837, 208],
       [90, 352],
     ],
     vines: [],
-    goalX: 3110,
-    goalY: 212,                                 // finish counts only UP on the tree platform — never from underneath
+    goalX: 2818,
+    goalY: 240,                                 // finish counts only UP on the tree platform — never from underneath
   },
   {
     name: 'Level 2 — Vine Swings',
     intro: 'Jump to grab a vine, swing gently, SPACE again to let go!',
-    world: 3930,
+    world: 4370,
     grounds: [[0, 420]],                        // like Level 1: solid ground ONLY at the start…
-    platforms: [                                // …then wide, spread-out platform clusters over the creek, linked by LONG vines — no running underneath, ever
+    platforms: [                                // …then platform clusters over the creek, linked by LONG vines — no running underneath, ever.
+      // HARDER (Finbar): same 102px gaps / up-to-70px steps as Level 1, and
+      // longer vine crossings. All audited jumpable / swingable.
       // cluster A
-      [170, 338, 180], [432, 296, 180], [694, 254, 180], [956, 296, 180],
+      [502, 338, 180], [784, 282, 180], [1066, 338, 180],
       // (vine 1 crosses from here — it reaches all the way to the landing platform)
-      [1400, 340, 190],
-      // cluster B — every gap is the same friendly 82px as everywhere else
-      // (an earlier layout accidentally left 262px gaps here — impossible jumps, now fixed)
-      [1672, 298, 180], [1934, 256, 180], [2196, 298, 180],
+      [1580, 338, 190],
+      // cluster B
+      [1872, 282, 180], [2154, 338, 180], [2436, 268, 180],
       // (vine 2 crosses from here)
-      [2640, 340, 190],
+      [2950, 338, 190],
       // cluster C, climbing to the tree
-      [2912, 298, 180], [3174, 256, 180], [3436, 214, 180],
-      [3618, 214, 220],                         // the golden-tree platform (the finish)
+      [3242, 282, 180], [3524, 338, 180], [3806, 268, 180],
+      [4088, 268, 220],                         // the golden-tree platform (the finish)
     ],
     bananas: [
-      [248, 306], [510, 264], [772, 222], [1034, 264],
-      [1265, 320],                      // mid-swing prize on the first vine
-      [1475, 308],
-      [1750, 266], [2012, 224], [2274, 266],
-      [2505, 320],                      // mid-swing prize on the second vine
-      [2715, 308],
-      [2990, 266], [3252, 224], [3514, 182],
+      [581, 306], [863, 250], [1145, 306],
+      [1390, 318],                      // mid-swing prize on the first vine
+      [1655, 306],
+      [1951, 250], [2233, 306], [2515, 236],
+      [2760, 318],                      // mid-swing prize on the second vine
+      [3025, 306],
+      [3321, 250], [3603, 306], [3885, 236],
+      [4167, 236],
       [90, 352],
     ],
     vines: [
-      [1280, 60, 260],                  // cluster A (ends x=1136) -> landing platform at x=1400: the swing reaches right over it
-      [2520, 60, 260],                  // cluster B (ends x=2376) -> landing platform at x=2640: the swing reaches right over it
+      [1400, 60, 260],                  // cluster A (ends x=1246) -> landing platform at x=1580: the swing reaches right over it
+      [2770, 60, 260],                  // cluster B (ends x=2616) -> landing platform at x=2950: the swing reaches right over it
     ],
-    goalX: 3678,
-    goalY: 214,                                 // finish counts only UP on the tree platform — never from underneath
+    goalX: 4148,
+    goalY: 268,                                 // finish counts only UP on the tree platform — never from underneath
   },
   {
     // LEVEL 3 teaches TIMING: when to jump and when NOT to jump.
@@ -252,35 +257,35 @@ const LEVELS = [
     // and jumping under one bonks his head (don't jump there!).
     name: '🌳 LEVEL 3 — TUNNEL TREE',
     intro: 'Run through the tree tunnel! Jump the gaps — but DON\'T jump under the hanging roots!',
-    world: 4140,
+    world: 4300,
     trunks: [[560, 2960]],                      // the giant tree: tunnel entrance x=560, exit x=2960
     grounds: [                                  // solid floor, with two gaps inside the tunnel
       [0, 560],                                 // outside, up to the tunnel entrance
       [560, 640],                               // tunnel floor A (560–1200)
-      [1296, 640],                              // tunnel floor B (1296–1936) — a 96px gap to jump
-      [2032, 928],                              // tunnel floor C (2032–2960) — another 96px gap, then the exit
+      [1304, 640],                              // tunnel floor B (1304–1944) — a 104px gap to jump (HARDER)
+      [2048, 912],                              // tunnel floor C (2048–2960) — another 104px gap, then the exit
     ],
     ceilings: [                                 // [x, width, underside y] — jumping into these = BONK
       [560, 2400, 232],                         // the tunnel roof itself (high enough to jump the gaps under it)
       [800, 110, 296], [1560, 110, 296],        // hanging roots: run under, DON'T jump
       [2300, 110, 296], [2680, 110, 296],
     ],
-    platforms: [                                // after the exit, climb the outside of the tree
-      [3050, 338, 180], [3312, 296, 180], [3574, 254, 180],
-      [3836, 214, 220],                         // up in the branches: the golden-tree platform (the finish)
+    platforms: [                                // after the exit, climb the outside of the tree (HARDER: 102px gaps, 70px steps)
+      [3050, 324, 180], [3332, 254, 180], [3614, 310, 180],
+      [3896, 240, 220],                         // up in the branches: the golden-tree platform (the finish)
     ],
     bananas: [
       [700, 344], [843, 344], [1050, 344],      // along floor A (843 is under a root — grab it WITHOUT jumping)
-      [1237, 338],                              // over the first floor gap — jump for it!
+      [1241, 338],                              // over the first floor gap — jump for it!
       [1450, 344], [1603, 344],                 // floor B (1603 is under a root)
-      [1973, 338],                              // over the second gap
+      [1985, 338],                              // over the second gap
       [2150, 344], [2343, 344], [2500, 344], [2723, 344],   // floor C (2343 & 2723 under roots)
-      [3128, 306], [3390, 264], [3652, 222],    // the climb out
+      [3128, 292], [3411, 222], [3693, 278], [3975, 208],   // the climb out
       [90, 352],
     ],
     vines: [],
-    goalX: 3896,
-    goalY: 214,
+    goalX: 3956,
+    goalY: 240,
   },
 ];
 
@@ -454,13 +459,16 @@ let genIdx = 0;
 function genTunnel() {
   // A whole Tunnel Tree section, generated like Level 3: tunnel floor with
   // one gap to jump, a roof, and two hanging roots not to jump under.
+  // The floor gap widens a little the farther the run has gone.
+  const d = Math.min(1, genLast.x / 24000);
+  const gapW = 96 + Math.round(14 * d);                       // 96px early, 110px deep in a run
   const startX = genLast.x + genLast.w;         // floor starts right where the last surface ends (Minx drops/runs straight in)
   const LEN = 1500;
-  level.grounds.push([startX, 700], [startX + 796, LEN - 796]);
+  level.grounds.push([startX, 700], [startX + 700 + gapW, LEN - 700 - gapW]);
   level.trunks.push([startX - 40, startX + LEN + 40]);
   level.ceilings.push([startX - 40, LEN + 80, 232], [startX + 260, 110, 296], [startX + 950, 110, 296]);
   for (const bx of [150, 304, 994, 1300]) bananasLeft.push({ x: startX + bx, y: 344, taken: false, bob: Math.random() * 6.28 });   // 304 & 994 sit under the roots — run, don't jump!
-  bananasLeft.push({ x: startX + 737, y: 338, taken: false, bob: Math.random() * 6.28 });   // over the tunnel floor gap
+  bananasLeft.push({ x: startX + 700 + gapW / 2 - 11, y: 338, taken: false, bob: Math.random() * 6.28 });   // over the tunnel floor gap
   genLast = { x: startX + LEN, y: GROUND_Y, w: 0 };
 }
 
@@ -468,14 +476,19 @@ function genNext() {
   const last = genLast;
   const kind = GEN_PLAN[genIdx % GEN_PLAN.length]; genIdx++;
   if (kind === 'T') { genTunnel(); return; }
+  // DIFFICULTY RAMP (Finbar): the farther the run goes, the harder it gets —
+  // wider gaps, bigger steps, slightly narrower platforms, longer vine
+  // crossings — but always inside what Minx's jump can actually do.
+  const d = Math.min(1, last.x / 24000);         // 0 at the start, full at ~480m
   if (kind === 'V') {
-    // a vine gap: swing across to a landing platform
-    vines.push({ ax: last.x + last.w + 140, ay: 60, len: 260, angle: 0, t: Math.random() * 6.28 });
-    endlessPlatform(last.x + last.w + 280, 340, 190);
+    // a vine gap: swing across to a landing platform (the crossing grows)
+    vines.push({ ax: last.x + last.w + 140 + Math.round(20 * d), ay: 60, len: 260, angle: 0, t: Math.random() * 6.28 });
+    endlessPlatform(last.x + last.w + 280 + Math.round(60 * d), 340, d > 0.6 ? 175 : 190);
   } else {
-    const dy = [-42, 0, 42, 0][Math.floor(Math.random() * 4)];
+    const steps = d < 0.35 ? [-42, 0, 42, 0] : d < 0.7 ? [-56, -42, 0, 42, 56, 0] : [-70, -56, -42, 0, 42, 56, 70, 0];
+    const dy = steps[Math.floor(Math.random() * steps.length)];
     const y = Math.max(202, Math.min(338, last.y + dy));
-    endlessPlatform(last.x + last.w + 82, y, 180);   // same friendly gaps as Levels 1–2
+    endlessPlatform(last.x + last.w + 82 + Math.round(36 * d), y, d > 0.6 ? 165 : 180);   // gaps grow 82px -> 118px
   }
 }
 
@@ -494,7 +507,7 @@ function ensureEndless() {
 
 function startEndless() {
   levelIndex = 3;
-  level = { name: '🌴 LEVEL 4 — ENDLESS RUN', intro: 'No finish line — platforms, vines AND tree tunnels, all mixed together!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], ceilings: [], trunks: [], goalX: Infinity, goalY: -9999, endless: true };
+  level = { name: '🌴 LEVEL 4 — ENDLESS RUN', intro: 'No finish line — platforms, vines AND tree tunnels, all mixed together. And it gets HARDER the farther you go!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], ceilings: [], trunks: [], goalX: Infinity, goalY: -9999, endless: true };
   lives = 3; runBananas = 0; bestBeatenShown = false;
   bananasLeft = []; vines = []; particles = [];
   player.x = 40; player.y = GROUND_Y - player.h;
@@ -517,6 +530,8 @@ function showOverlay(title, html, btnLabel, onClick) {
   ovBtn.onclick = onClick;
   document.getElementById('bank-line').style.display = 'none';   // shop rows only show in the main menu
   document.getElementById('char-row').style.display = 'none';
+  document.getElementById('daily-label').style.display = 'none';
+  document.getElementById('daily-row').style.display = 'none';
   document.getElementById('hat-row').style.display = 'none';
   overlay.classList.remove('hidden');
 }
@@ -535,17 +550,58 @@ const CHARACTERS = [
   { name: 'Green',   fur: '#43a047', dark: '#2e7d32', price: 15 },
   { name: 'Blue',    fur: '#1e88e5', dark: '#1565c0', price: 20 },
   { name: 'Purple',  fur: '#8e24aa', dark: '#6a1b9a', price: 20 },
-  { name: '⭐ GOLDEN', fur: '#ffd83d', dark: '#d4a017', price: 150, rare: true },
-  { name: '🌌 VOID',   fur: '#372b4d', dark: '#1d1830', price: 250, rare: true, eyes: '#b388ff' },
+  { name: '⭐ GOLDEN', fur: '#ffd83d', dark: '#d4a017', price: 300, rare: true },
+  { name: '🌌 VOID',   fur: '#372b4d', dark: '#1d1830', price: 500, rare: true, eyes: '#b388ff' },
+  // More skins (appended — indices never move, so saved collections stay valid).
+  // Prices climb steeply (Finbar): the cooler it looks, the more bananas it costs.
+  { name: 'Pink',    fur: '#f48fb1', dark: '#c2185b', price: 25 },
+  { name: 'Cyan',    fur: '#26c6da', dark: '#0097a7', price: 25 },
+  { name: 'Lime',    fur: '#9ccc65', dark: '#689f38', price: 30 },
+  { name: 'Snow',    fur: '#eceff1', dark: '#b0bec5', price: 40, eyes: '#37474f' },
+  { name: 'Midnight', fur: '#37474f', dark: '#102027', price: 40, eyes: '#ffd83d' },
+  { name: '💎 DIAMOND', fur: '#b9f2ff', dark: '#4fb3bf', price: 750, rare: true, eyes: '#0d47a1' },
+  { name: '🌈 RAINBOW', fur: '#e53935', dark: '#8e24aa', price: 1000, rare: true, rainbow: true },
+  { name: '🤖 ROBOT', fur: '#b0bec5', dark: '#607d8b', price: 600, rare: true, robot: true, eyes: '#ff1744' },
 ];
+// SKIN OF THE DAY: one special skin is in the shop each day, on rotation —
+// a different one tomorrow! (Once bought, it's yours forever and joins the
+// main grid.) Indices continue after CHARACTERS so saves stay consistent.
+const DAILY_SKINS = [
+  { name: '🌅 Sunset',   fur: '#ff7043', dark: '#d84315', price: 120, daily: true },
+  { name: '🍬 Bubblegum', fur: '#f06292', dark: '#ad1457', price: 120, daily: true },
+  { name: '🌿 Mint',      fur: '#4db6ac', dark: '#00796b', price: 120, daily: true },
+  { name: '💜 Lavender',  fur: '#9575cd', dark: '#5e35b1', price: 120, daily: true },
+  { name: '🪸 Coral',     fur: '#ff8a65', dark: '#e64a19', price: 120, daily: true },
+  { name: '❄️ Frost',     fur: '#90caf9', dark: '#1976d2', price: 120, daily: true },
+  { name: '🍯 Honey',     fur: '#ffca28', dark: '#ff8f00', price: 120, daily: true },
+];
+const ALL_SKINS = CHARACTERS.concat(DAILY_SKINS);
+function todaysSkinIndex() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / 86400000);
+  return CHARACTERS.length + (dayOfYear % DAILY_SKINS.length);
+}
 const HATS = [
   { id: 'none',   name: 'No Hat',     price: 0 },
   { id: 'cap',    name: 'Cap',        price: 15 },
   { id: 'flower', name: 'Flower',     price: 20 },
   { id: 'party',  name: 'Party Hat',  price: 25 },
+  { id: 'beanie', name: 'Beanie',     price: 30 },
   { id: 'shades', name: 'Shades',     price: 40 },
+  { id: 'mohawk', name: 'Mohawk',     price: 45 },
+  { id: 'phones', name: 'Headphones', price: 55 },
   { id: 'banana', name: 'Banana Hat', price: 60 },
-  { id: 'crown',  name: '👑 Crown',   price: 100 },
+  { id: 'antlers', name: 'Antlers',   price: 65 },
+  { id: 'cowboy', name: 'Cowboy Hat', price: 70 },
+  { id: 'santa',  name: 'Santa Hat',  price: 80 },
+  { id: 'chef',   name: 'Chef Hat',   price: 85 },
+  { id: 'pirate', name: 'Pirate Hat', price: 90 },
+  { id: 'tophat', name: 'Top Hat',    price: 150 },
+  { id: 'crown',  name: '👑 Crown',   price: 250 },
+  { id: 'wizard', name: '🧙 Wizard Hat', price: 300 },
+  { id: 'helmet', name: '🛡️ Knight Helmet', price: 350 },
+  { id: 'halo',   name: '😇 Halo',    price: 400 },
 ];
 function store(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } }
 function save(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
@@ -574,6 +630,18 @@ function drawHatOn(P, ox, oy, hat) {
   }
   else if (hat === 'banana') { P(ox + 4, oy - 5, 8, 4, '#ffd83d'); P(ox + 9, oy - 8, 16, 5, '#ffd83d'); P(ox + 22, oy - 5, 8, 4, '#ffd83d'); P(ox + 15, oy - 11, 4, 4, '#6d4c41'); }
   else if (hat === 'crown') { P(ox + 6, oy - 3, 22, 6, '#ffd83d'); P(ox + 6, oy - 8, 5, 6, '#ffd83d'); P(ox + 15, oy - 9, 5, 7, '#ffd83d'); P(ox + 23, oy - 8, 5, 6, '#ffd83d'); }
+  else if (hat === 'beanie') { P(ox + 6, oy - 4, 22, 7, '#26a69a'); P(ox + 5, oy + 2, 24, 3, '#00796b'); P(ox + 15, oy - 8, 5, 5, '#eceff1'); }
+  else if (hat === 'mohawk') { P(ox + 14, oy - 12, 6, 13, '#ec407a'); P(ox + 15, oy - 15, 4, 4, '#ec407a'); }
+  else if (hat === 'phones') { P(ox + 8, oy - 5, 18, 4, '#37474f'); P(ox + 3, oy - 2, 6, 13, '#546e7a'); P(ox + 25, oy - 2, 6, 13, '#546e7a'); P(ox + 4, oy + 2, 4, 6, '#ffd83d'); P(ox + 26, oy + 2, 4, 6, '#ffd83d'); }
+  else if (hat === 'antlers') { P(ox + 2, oy - 10, 4, 11, '#8d6e63'); P(ox - 1, oy - 13, 4, 4, '#8d6e63'); P(ox + 4, oy - 16, 3, 5, '#8d6e63'); P(ox + 28, oy - 10, 4, 11, '#8d6e63'); P(ox + 31, oy - 13, 4, 4, '#8d6e63'); P(ox + 27, oy - 16, 3, 5, '#8d6e63'); }
+  else if (hat === 'cowboy') { P(ox + 2, oy + 1, 30, 3, '#8d6e63'); P(ox + 10, oy - 7, 14, 9, '#a1887f'); P(ox + 10, oy - 3, 14, 3, '#6d4c41'); }
+  else if (hat === 'santa') { P(ox + 5, oy - 3, 24, 6, '#eceff1'); P(ox + 8, oy - 10, 16, 8, '#e53935'); P(ox + 20, oy - 13, 10, 6, '#e53935'); P(ox + 27, oy - 10, 6, 6, '#eceff1'); }
+  else if (hat === 'chef') { P(ox + 8, oy - 11, 18, 9, '#eceff1'); P(ox + 6, oy - 7, 4, 5, '#eceff1'); P(ox + 24, oy - 7, 4, 5, '#eceff1'); P(ox + 7, oy - 3, 20, 5, '#cfd8dc'); }
+  else if (hat === 'pirate') { P(ox + 4, oy - 4, 26, 7, '#263238'); P(ox + 8, oy - 7, 18, 4, '#263238'); P(ox + 15, oy - 3, 4, 4, '#eceff1'); }
+  else if (hat === 'tophat') { P(ox + 11, oy - 14, 12, 15, '#263238'); P(ox + 11, oy - 5, 12, 4, '#78909c'); P(ox + 5, oy, 24, 3, '#263238'); }
+  else if (hat === 'wizard') { P(ox + 5, oy - 2, 24, 4, '#5e35b1'); P(ox + 10, oy - 9, 14, 8, '#5e35b1'); P(ox + 13, oy - 16, 9, 8, '#5e35b1'); P(ox + 15, oy - 22, 5, 7, '#4527a0'); P(ox + 13, oy - 12, 3, 3, '#ffd83d'); P(ox + 19, oy - 6, 3, 3, '#ffd83d'); }
+  else if (hat === 'helmet') { P(ox + 5, oy - 4, 24, 9, '#b0bec5'); P(ox + 5, oy + 4, 4, 8, '#90a4ae'); P(ox + 25, oy + 4, 4, 8, '#90a4ae'); P(ox + 15, oy - 1, 4, 12, '#90a4ae'); P(ox + 15, oy - 13, 4, 10, '#e53935'); P(ox + 13, oy - 15, 8, 3, '#e53935'); }
+  else if (hat === 'halo') { P(ox + 8, oy - 13, 18, 3, '#ffd83d'); P(ox + 11, oy - 12, 12, 1, '#fff59d'); }
 }
 // ONE monkey figure, used by the menu previews AND matching the in-game
 // monkey exactly (same proportions as drawMonkey's standing pose) — so the
@@ -591,15 +659,17 @@ function drawMonkeyFigure(P, ox, oy, pal, hat) {
   P(ox + 10, oy + 8, 14, 10, tan);                          // face
   P(ox + 12, oy + 5, 3, 3, eye); P(ox + 20, oy + 5, 3, 3, eye);              // eyes (on the face!)
   P(ox + 15, oy + 13, 5, 2, '#212121');                     // mouth — every monkey has one
+  if (pal.robot) { P(ox + 16, oy - 6, 2, 6, pal.dark); P(ox + 14, oy - 10, 6, 5, '#ff1744'); }   // robot antenna
   drawHatOn(P, ox, oy, hat);
 }
 function drawMonkeyPreview(c2, pal, hat) {
   const P = (x, y, w, h, c) => { c2.fillStyle = c; c2.fillRect(x, y, w, h); };
-  drawMonkeyFigure(P, 10, 20, pal, hat);
+  if (pal.rainbow) pal = { fur: '#ff9800', dark: '#7b1fa2', eyes: pal.eyes };   // static stand-in colour for the ever-changing rainbow monkey
+  drawMonkeyFigure(P, 10, 22, pal, hat);
 }
 function drawHatPreview(c2, hat) {
   const P = (x, y, w, h, c) => { c2.fillStyle = c; c2.fillRect(x, y, w, h); };
-  drawMonkeyFigure(P, 10, 20, CHARACTERS[0], hat);   // classic monkey wearing the hat
+  drawMonkeyFigure(P, 10, 22, CHARACTERS[0], hat);   // classic monkey wearing the hat
 }
 function shopButton(label, price, owned, selected, previewFn, onPick) {
   const b = document.createElement('button');
@@ -613,20 +683,28 @@ function shopButton(label, price, owned, selected, previewFn, onPick) {
   b.addEventListener('click', onPick);
   return b;
 }
+function pickSkin(i) {
+  const c = ALL_SKINS[i];
+  const owned = ownedChars.includes(i);
+  if (owned) { charIdx = i; save('minxChar', charIdx); sfx.coin(); }
+  else if (bank >= c.price) { bank -= c.price; ownedChars.push(i); charIdx = i; save('minxBank', bank); save('minxOwnedChars', ownedChars); save('minxChar', charIdx); sfx.life(); }
+  else { sfx.bonk(); }
+  renderShop();
+}
+function skinButton(i) {
+  const c = ALL_SKINS[i];
+  return shopButton(c.name, c.price, ownedChars.includes(i), charIdx === i,
+    (c2) => drawMonkeyPreview(c2, c, hatId), () => pickSkin(i));
+}
 function renderShop() {
   document.getElementById('bank-n').textContent = bank;
   const cr = document.getElementById('char-row'); cr.innerHTML = '';
-  CHARACTERS.forEach((c, i) => {
-    const owned = ownedChars.includes(i);
-    cr.appendChild(shopButton(c.name, c.price, owned, charIdx === i,
-      (c2) => drawMonkeyPreview(c2, c, hatId),
-      () => {
-        if (owned) { charIdx = i; save('minxChar', charIdx); sfx.coin(); }
-        else if (bank >= c.price) { bank -= c.price; ownedChars.push(i); charIdx = i; save('minxBank', bank); save('minxOwnedChars', ownedChars); save('minxChar', charIdx); sfx.life(); }
-        else { sfx.bonk(); }
-        renderShop();
-      }));
+  ALL_SKINS.forEach((c, i) => {
+    if (c.daily && !ownedChars.includes(i)) return;   // unowned daily skins live only in the Skin of the Day row
+    cr.appendChild(skinButton(i));
   });
+  const dr = document.getElementById('daily-row'); dr.innerHTML = '';
+  dr.appendChild(skinButton(todaysSkinIndex()));
   const hr = document.getElementById('hat-row'); hr.innerHTML = '';
   HATS.forEach((h) => {
     const owned = ownedHats.includes(h.id);
@@ -643,11 +721,13 @@ function renderShop() {
 function openMenu() {
   state = 'menu';
   ovTitle.textContent = "🐵 MINX'S MAIN MENU";
-  ovText.innerHTML = 'Pick your monkey and a hat!<br>Collect bananas in the game to fill your <b>Banana Bank</b>, then unlock<br><b>rainbow monkeys</b>, the RARE <b>⭐ Golden</b> and <b>🌌 Void</b> monkeys, and cool hats.';
+  ovText.innerHTML = 'Pick your monkey and a hat!<br>Collect bananas in the game to fill your <b>Banana Bank</b>.<br>The cooler it looks, the more bananas it costs — the <b>🌈 Rainbow</b> monkey is <b>1000</b>!<br>And check back every day for the <b>🌟 Skin of the Day</b>.';
   ovBtn.textContent = '▶ PLAY!';
   ovBtn.onclick = newGame;
   document.getElementById('bank-line').style.display = 'block';
   document.getElementById('char-row').style.display = 'flex';
+  document.getElementById('daily-label').style.display = 'block';
+  document.getElementById('daily-row').style.display = 'flex';
   document.getElementById('hat-row').style.display = 'flex';
   overlay.classList.remove('hidden');
   renderShop();
@@ -1007,7 +1087,11 @@ function drawMonkey() {
   const jumping = !player.onGround && !player.swinging;
   // a little bob while running; body rises slightly in the jump pose
   const y = player.y - (running ? Math.round(Math.abs(Math.sin(player.animT)) * 2) : 0);
-  const pal = CHARACTERS[charIdx];
+  let pal = ALL_SKINS[charIdx] || CHARACTERS[0];
+  if (pal.rainbow) {   // the RAINBOW monkey cycles through every colour as he plays
+    const hue = Math.floor((performance.now() / 12) % 360);
+    pal = { fur: 'hsl(' + hue + ', 85%, 55%)', dark: 'hsl(' + ((hue + 60) % 360) + ', 70%, 38%)', eyes: pal.eyes };
+  }
   const brown = pal.fur, dark = pal.dark, tan = '#d7a679';   // fur colour comes from the main-menu character choice
   // tail (sticks up in the air, wags while running)
   if (jumping) px(x - 4, y + 8, 8, 5, dark);
@@ -1047,6 +1131,7 @@ function drawMonkey() {
   px(x + 20, y + 5, 3, 3, pal.eyes || '#212121');
   if (jumping) { px(x + 15, y + 12, 5, 4, '#212121'); }   // "ooh!" mouth in the air
   else px(x + 15, y + 13, 5, 2, '#212121');             // smile
+  if (ALL_SKINS[charIdx] && ALL_SKINS[charIdx].robot) { px(x + 16, y - 6, 2, 6, dark); px(x + 14, y - 10, 6, 5, '#ff1744'); }   // robot antenna
   drawHatOn(px, x, y, player.swinging ? 'none' : hatId);   // his hat comes off while he's holding a vine overhead
 }
 
