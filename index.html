@@ -1289,42 +1289,60 @@ function drawWorld() {
     const bobY = Math.sin(Date.now() / 300 + b.bob) * 3;
     drawBanana(sx, b.y + bobY);
   }
-  // goal: golden tree, rooted at the level's goal height (a platform in Level 1)
+  // goal: THE GOLDEN TREE (Finbar) — a GIANT tree, far bigger than the
+  // others, branches reaching out everywhere, and golden bananas growing
+  // all over it. Rooted at the level's goal height.
   const gx = level.goalX - cameraX, gy = level.goalY;
-  if (gx > -120 && gx < W + 60) {
-    px(gx + 28, gy - 92, 18, 92, '#6d4c2f');
-    px(gx, gy - 152, 74, 66, '#ffb300');
-    px(gx + 12, gy - 170, 50, 22, '#ffd83d');
-    drawBanana(gx + 26, gy - 130);
+  if (gx > -360 && gx < W + 360) {
+    const cx = gx + 16, base = gy;
+    // roots gripping the platform
+    px(cx - 46, base - 9, 40, 9, '#5d4037'); px(cx + 8, base - 9, 40, 9, '#5d4037');
+    px(cx - 34, base - 17, 26, 9, '#5d4037'); px(cx + 10, base - 17, 26, 9, '#5d4037');
+    // the giant trunk — plain brown, thick as three normal trees
+    px(cx - 20, base - 156, 42, 156, '#6d4c2f');
+    px(cx - 24, base - 44, 50, 12, '#6d4c2f');
+    // branches reaching out everywhere (stepped pixel diagonals)
+    for (let s = 0; s < 6; s++) px(cx - 16 - s * 13, base - 128 - s * 10, 17, 9, '#6d4c2f');   // up-left
+    for (let s = 0; s < 6; s++) px(cx + 12 + s * 13, base - 132 - s * 10, 17, 9, '#6d4c2f');   // up-right
+    for (let s = 0; s < 4; s++) px(cx - 16 - s * 14, base - 92 - s * 5, 16, 8, '#6d4c2f');     // mid-left
+    for (let s = 0; s < 4; s++) px(cx + 12 + s * 14, base - 96 - s * 5, 16, 8, '#6d4c2f');     // mid-right
+    for (let s = 0; s < 4; s++) px(cx - 3 + s * 2, base - 152 - s * 12, 13, 9, '#6d4c2f');      // straight up
+    // the huge golden canopy
+    blob(cx, base - 216, 80, '#ffb300');
+    blob(cx - 76, base - 184, 54, '#ffca28'); blob(cx + 80, base - 186, 56, '#ffb300');
+    blob(cx - 34, base - 248, 50, '#ffd83d'); blob(cx + 42, base - 246, 48, '#ffca28');
+    blob(cx - 104, base - 148, 38, '#ffb300'); blob(cx + 112, base - 150, 40, '#ffd83d');
+    blob(cx - 52, base - 222, 26, '#ffe082'); blob(cx + 58, base - 216, 24, '#ffe082');        // sunlit patches
+    // golden bananas growing ALL over it
+    drawBanana(cx - 108, base - 168); drawBanana(cx + 96, base - 172); drawBanana(cx - 62, base - 238);
+    drawBanana(cx + 44, base - 240); drawBanana(cx - 14, base - 262); drawBanana(cx - 88, base - 128);
+    drawBanana(cx + 118, base - 132); drawBanana(cx - 34, base - 196); drawBanana(cx + 66, base - 200);
+    drawBanana(cx + 2, base - 148);
+    // golden sparkles drifting on the tree
+    const tw = Math.floor(Date.now() / 400) % 3;
+    px(cx - 90 + tw * 60, base - 206, 4, 4, '#fff9c4'); px(cx + 84 - tw * 44, base - 232, 4, 4, '#fff9c4'); px(cx + 20 + tw * 30, base - 168, 4, 4, '#fff9c4');
   }
 }
 
 function drawBanana(x, y) {
-  // A proper banana: a long shallow crescent with pointed tips, a stem,
-  // and the ridge line every real banana has — not a round blob.
-  // (Finbar said the old round one looked like a golden apple.)
-  const Y = '#ffd83d', L = '#fff176', S = '#f9a825', R = '#e0a800';
-  px(x + 2, y, 3, 5, '#6d4c2f');          // stem at the top-left
-  px(x + 4, y + 3, 3, 3, '#8d6e63');
-  px(x + 0, y + 5, 6, 5, Y);              // left tip
-  px(x + 3, y + 9, 6, 5, Y);              // sweeping down…
-  px(x + 8, y + 12, 7, 5, Y);
-  px(x + 14, y + 12, 6, 5, Y);            // bottom of the curve
-  px(x + 19, y + 9, 6, 5, Y);             // …sweeping back up
-  px(x + 23, y + 5, 4, 5, Y);
-  px(x + 25, y + 3, 2, 4, S);             // pointed right tip
-  px(x + 4, y + 12, 4, 3, S);             // shaded underside
-  px(x + 9, y + 15, 10, 3, S);
-  px(x + 19, y + 12, 4, 3, S);
-  px(x + 3, y + 10, 5, 2, R);             // the ridge, following the curve
-  px(x + 9, y + 13, 6, 2, R);
-  px(x + 16, y + 13, 5, 2, R);
-  px(x + 21, y + 10, 4, 2, R);
-  px(x + 3, y + 7, 5, 2, L);              // shiny highlight above the ridge
-  px(x + 9, y + 10, 6, 2, L);
-  px(x + 16, y + 10, 5, 2, L);
+  // A SMOOTH banana (Finbar: the old blocky segmented one looked like a
+  // cut-up mango). One solid golden silhouette swept along a gentle smile
+  // arc — overlapping pixel blobs merge into a single smooth shape, with
+  // NO segment lines and NO ridge. Just a soft sheen on top, a little
+  // brown stem, and a pointed tip.
+  const cx = x + 13, cy = y + 3;
+  for (let t = 0; t <= 10; t++) {
+    const dx = t - 5;
+    const bx = cx + dx * 2.4;
+    const by = cy + 7 - (dx * dx) / 3.6;                 // the smile curve: middle low, tips up
+    const r = 4.6 - Math.abs(dx) * 0.42;                 // thick in the middle, tapering to the tips
+    blob(bx, by, r, '#ffd83d');                          // the body, one colour
+    blob(bx - 1, by - 2, Math.max(1.6, r * 0.52), '#fff59d');   // soft sheen along the top
+  }
+  px(cx - 14, cy - 3, 4, 6, '#6d4c2f');                  // stem at the top-left tip
+  px(cx - 13, cy - 5, 3, 3, '#8bc34a');
+  px(cx + 12, cy + 1, 3, 3, '#f9a825');                  // the pointed right tip
 }
-
 function drawMonkey() {
   const x = player.x - cameraX;
   const running = player.onGround && !player.swinging && Math.abs(player.vx) > 0.5;   // legs pump only when he's actually moving (he can stand still now)
