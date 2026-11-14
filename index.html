@@ -266,7 +266,6 @@ const LEVELS = [
       [90, 352],
     ],
     vines: [],
-    gates: [[300, 384], [853, 282]],            // obstacles to jump over: one on the start ground, one on a platform
     goalX: 2738,
     goalY: 282,                                 // finish counts only UP on the tree platform — never from underneath
   },
@@ -305,7 +304,6 @@ const LEVELS = [
       [1380, 60, 260],                  // cluster A (ends x=1226) -> landing platform at x=1540: the swing reaches right over it
       [2710, 60, 260],                  // cluster B (ends x=2556) -> landing platform at x=2890: the swing reaches right over it
     ],
-    gates: [[2170, 338], [3520, 338]],          // gates standing on platforms — jump over them!
     goalX: 4058,
     goalY: 282,                                 // finish counts only UP on the tree platform — never from underneath
   },
@@ -343,7 +341,6 @@ const LEVELS = [
       [90, 352],
     ],
     vines: [],
-    gates: [[300, 384], [1000, 384], [2560, 384]],   // gates: on the start ground, in the tunnel (floor A), and on floor C — jump over!
     goalX: 3926,
     goalY: 274,
   },
@@ -378,7 +375,6 @@ const player = {
 
 let bananasLeft = [];
 let vines = [];
-let gateList = [];   // gate/wall obstacles [ {x, surfY} ] — Minx must jump OVER them
 let particles = [];             // little sparkles for bananas, droplets for splashes
 
 function spawnParticles(x, y, color, n, spread, up) {
@@ -397,7 +393,6 @@ function startLevel(idx, keepLives) {
   if (!keepLives) { /* new game resets handled by caller */ }
   bananasLeft = level.bananas.map(b => ({ x: b[0], y: b[1], taken: false, bob: Math.random() * 6.28 }));
   vines = level.vines.map(v => ({ ax: v[0], ay: v[1], len: v[2], angle: 0, t: Math.random() * 6.28 }));
-  gateList = (level.gates || []).map(g => ({ x: g[0], surfY: g[1] }));
   player.x = 40; player.y = GROUND_Y - player.h;
   player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
   player.safeX = 40; player.safeY = player.y;
@@ -511,7 +506,6 @@ function completeLevel() {
 function endlessPlatform(x, y, w) {
   level.platforms.push([x, y, w]);
   bananasLeft.push({ x: x + w / 2 - 11, y: y - 32, taken: false, bob: Math.random() * 6.28 });
-  if (Math.random() < 0.3) gateList.push({ x: x + w / 2 - 9, surfY: y });   // some platforms have a gate to jump over
   genLast = { x, y, w };
 }
 
@@ -533,7 +527,6 @@ function genTunnel() {
   level.ceilings.push([startX - 40, LEN + 80, 232], [startX + 260, 110, 296], [startX + 950, 110, 296]);
   for (const bx of [150, 304, 994, 1300]) bananasLeft.push({ x: startX + bx, y: 344, taken: false, bob: Math.random() * 6.28 });   // 304 & 994 sit under the roots — run, don't jump!
   bananasLeft.push({ x: startX + 700 + gapW / 2 - 11, y: 338, taken: false, bob: Math.random() * 6.28 });   // over the tunnel floor gap
-  if (Math.random() < 0.5) gateList.push({ x: startX + 520, surfY: GROUND_Y });   // sometimes a gate on the tunnel floor (clear of the roots)
   genLast = { x: startX + LEN, y: GROUND_Y, w: 0 };
 }
 
@@ -567,7 +560,6 @@ function ensureEndless() {
     level.trunks = level.trunks.filter(t => t[1] > cameraX - 400);
     bananasLeft = bananasLeft.filter(b => b.x > cameraX - 400);
     vines = vines.filter(v => v.ax > cameraX - 500);
-    gateList = gateList.filter(g => g.x > cameraX - 400);
   }
 }
 
@@ -575,7 +567,7 @@ function startEndless() {
   levelIndex = 3;
   level = { name: 'LEVEL 4 — ENDLESS RUN', intro: 'No finish line — platforms, vines AND tree tunnels, all mixed together. And it gets trickier the farther you go!', world: Infinity, grounds: [[0, 420]], platforms: [], bananas: [], vines: [], ceilings: [], trunks: [], goalX: Infinity, goalY: -9999, endless: true };
   lives = 3; runBananas = 0; bestBeatenShown = false;
-  bananasLeft = []; vines = []; particles = []; gateList = [];
+  bananasLeft = []; vines = []; particles = [];
   player.x = 40; player.y = GROUND_Y - player.h;
   player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
   player.safeX = 40; player.safeY = player.y;
@@ -805,12 +797,10 @@ document.getElementById('menu-play').addEventListener('click', () => { closeMenu
 /* ---------- physics & update ---------- */
 const GRAV = 0.6, MOVE = 3.4, JUMP = -11;   // Minx's ORIGINAL speed — now truly constant thanks to the fixed 60-steps-per-second loop below; the game is made easier by wide, spread-out platforms with smaller height steps
 
-const GATE_W = 18, GATE_H = 46;
 function solids() {
   const list = [];
   for (const g of level.grounds) list.push({ x: g[0], y: GROUND_Y, w: g[1], ground: true });
   for (const p of level.platforms) list.push({ x: p[0], y: p[1], w: p[2], ground: false });
-  for (const g of gateList) list.push({ x: g.x, y: g.surfY - GATE_H, w: GATE_W, ground: false });   // Minx can also land on TOP of a gate
   return list;
 }
 
@@ -893,19 +883,6 @@ function update() {
       }
     }
 
-    // Gates are WALLS from the side: if Minx runs into one, it stops him —
-    // he has to jump over it (or land on top).
-    for (const g of gateList) {
-      const top = g.surfY - GATE_H;
-      const overlapX = player.x + player.w > g.x && player.x < g.x + GATE_W;
-      const overlapY = player.y + player.h > top + 10 && player.y < g.surfY;
-      if (overlapX && overlapY) {
-        if (player.vx > 0) player.x = g.x - player.w;
-        else if (player.vx < 0) player.x = g.x + GATE_W;
-        else player.x = (player.x + player.w / 2 < g.x + GATE_W / 2) ? g.x - player.w : g.x + GATE_W;
-      }
-    }
-
     // Ceilings (Tunnel Tree): jumping up into the tunnel roof or a hanging
     // root bonks Minx's head and stops the jump — the "don't jump here" lesson.
     for (const c of (level.ceilings || [])) {
@@ -964,10 +941,26 @@ function update() {
 
 /* ---------- drawing (chunky pixels, no image files) ---------- */
 function px(x, y, w, h, color) {
-  // CRISP PIXELS (Finbar): everything snaps to a chunky 2px grid at FULL
-  // resolution — pixelated, but sharp and clear, never blurry.
+  // CRISP PIXELS (Finbar): shapes keep chunky 2px-grid SIZES at full
+  // resolution (sharp, never blurry), but positions move 1px at a time so
+  // the ANIMATION stays smooth instead of juddering in 2px hops.
   ctx.fillStyle = color;
-  ctx.fillRect(Math.round(x / 2) * 2, Math.round(y / 2) * 2, Math.max(2, Math.round(w / 2) * 2), Math.max(2, Math.round(h / 2) * 2));
+  ctx.fillRect(Math.round(x), Math.round(y), Math.max(2, Math.round(w / 2) * 2), Math.max(2, Math.round(h / 2) * 2));
+}
+// BARK TEXTURE (Finbar): wavy vertical grooves, light ridges and flecks —
+// drawn over tree trunks so the bark looks like real bark, in pixels.
+function barkTexture(x, y, w, h, seed) {
+  for (let gx = x + 5 + (seed % 5); gx < x + w - 3; gx += 11) {           // dark grooves, wobbling as they climb
+    for (let gy = y + 2; gy < y + h - 6; gy += 10) {
+      const off = ((gx * 7 + gy * 13 + seed) % 3) - 1;
+      px(gx + off, gy, 3, 9, '#4e342e');
+    }
+  }
+  for (let gx = x + 10 + (seed % 5); gx < x + w - 3; gx += 22) px(gx, y + 3, 2, Math.max(2, h - 6), '#8d6e63');   // light ridges
+  const flecks = Math.floor(w * h / 900);
+  for (let f = 0; f < flecks; f++) {                                       // little bark flecks
+    px(x + ((seed * 31 + f * 47) % Math.max(4, w - 6)), y + ((seed * 17 + f * 29) % Math.max(4, h - 6)), 3, 2, '#795548');
+  }
 }
 // a circle made of pixel blocks (no smooth anti-aliased arcs anywhere)
 function blob(cx, cy, r, color) {
@@ -997,6 +990,7 @@ function drawBackground() {
   for (let i = 0; i < 10; i++) {
     const tx = ((i * 105 - cameraX * 0.55) % (W + 140) + W + 140) % (W + 140) - 70;
     px(tx + 26, 196, 13 + (i % 3) * 3, GROUND_Y - 186, '#4e342e');
+    barkTexture(tx + 26, 196, 13 + (i % 3) * 3, GROUND_Y - 196, i * 7 + 3);
     blob(tx + 32, 208, 56, greens[(i + 2) % greens.length]);
     blob(tx + 6, 232, 34, greens[i % greens.length]);
   }
@@ -1149,6 +1143,7 @@ function drawWorld() {
     px(tx0, 140, tw, 92, '#6d4c2f');
     px(tx0, 140, tw, 10, '#795548');
     for (let bx = tx0 + 22; bx < tx1 - 10; bx += 52) px(bx, 150, 6, 76, '#5d4037');   // bark stripes
+    barkTexture(tx0 + 6, 148, tw - 12, 80, (tr[0] % 89) + 5);                        // full bark texture over the trunk
     const kx = tx0 + 190 + (tr[0] % 260);                   // a knot in the wood
     blob(kx, 188, 11, '#4e342e');
     blob(kx, 188, 5, '#3e2723');
@@ -1157,6 +1152,8 @@ function drawWorld() {
     px(tx0, 300, tw, 4, '#3e2723'); px(tx0, 348, tw, 4, '#3e2723');   // carved rings inside
     px(tx0 - 8, 140, 12, GROUND_Y - 140, '#5d4037');        // entrance pillar
     px(tx1 - 4, 140, 12, GROUND_Y - 140, '#5d4037');        // exit pillar
+    barkTexture(tx0 - 8, 140, 12, GROUND_Y - 140, 21);
+    barkTexture(tx1 - 4, 140, 12, GROUND_Y - 140, 47);
     // roots flaring out at the base, like a real tree gripping the ground
     px(tx0 - 22, 366, 40, 18, '#5d4037'); px(tx0 - 14, 350, 26, 18, '#5d4037'); px(tx0 - 26, 378, 48, 8, '#4e342e');
     px(tx1 - 18, 366, 40, 18, '#5d4037'); px(tx1 - 12, 350, 26, 18, '#5d4037'); px(tx1 - 22, 378, 48, 8, '#4e342e');
@@ -1214,21 +1211,11 @@ function drawWorld() {
     const bobY = Math.sin(Date.now() / 300 + b.bob) * 3;
     drawBanana(sx, b.y + bobY);
   }
-  // gates: little wooden barriers standing on the ground/platforms — jump over!
-  for (const g of gateList) {
-    const sx = g.x - cameraX; if (sx < -40 || sx > W + 20) continue;
-    const top = g.surfY - GATE_H;
-    px(sx, top, 4, GATE_H, '#6d4c41'); px(sx + GATE_W - 4, top, 4, GATE_H, '#6d4c41');   // posts
-    px(sx, top + 6, GATE_W, 7, '#a1887f');                                              // planks
-    px(sx, top + 22, GATE_W, 7, '#a1887f');
-    px(sx, top + 36, GATE_W, 7, '#a1887f');
-    px(sx + 2, top + 13, 3, 10, '#8d6e63'); px(sx + GATE_W - 5, top + 29, 3, 10, '#8d6e63');   // pegs
-    px(sx + 6, top - 4, 6, 5, '#e53935');                                               // a little red flag on top
-  }
   // goal: golden tree, rooted at the level's goal height (a platform in Level 1)
   const gx = level.goalX - cameraX, gy = level.goalY;
   if (gx > -120 && gx < W + 60) {
     px(gx + 28, gy - 92, 18, 92, '#6d4c2f');
+    barkTexture(gx + 28, gy - 92, 18, 92, 7);
     px(gx, gy - 152, 74, 66, '#ffb300');
     px(gx + 12, gy - 170, 50, 22, '#ffd83d');
     drawBanana(gx + 26, gy - 130);
@@ -1402,6 +1389,7 @@ function draw() {
 // literally moved faster on them. Now his speed is the true original
 // speed everywhere.)
 let lastTime = 0, timeAcc = 0;
+let prevPX = 0, prevPY = 0, prevCam = 0;   // for smooth interpolated drawing
 function loop(ts) {
   requestAnimationFrame(loop);
   if (!lastTime) lastTime = ts;
@@ -1409,8 +1397,21 @@ function loop(ts) {
   lastTime = ts;
   if (dt > 0.25) dt = 0.25;                 // tab was away — don't lurch
   timeAcc += dt;
-  while (timeAcc >= 1 / 60) { update(); timeAcc -= 1 / 60; }
+  while (timeAcc >= 1 / 60) {
+    prevPX = player.x; prevPY = player.y; prevCam = cameraX;
+    update();
+    timeAcc -= 1 / 60;
+  }
+  // SMOOTH ANIMATION (Finbar): physics still steps at exactly 60/sec, but
+  // the picture is drawn BETWEEN steps (interpolated), so movement glides
+  // on any screen — 60Hz, 120Hz, 144Hz — instead of juddering.
+  const a = Math.max(0, Math.min(1, timeAcc / (1 / 60)));
+  const realX = player.x, realY = player.y, realCam = cameraX;
+  player.x = prevPX + (realX - prevPX) * a;
+  player.y = prevPY + (realY - prevPY) * a;
+  cameraX = prevCam + (realCam - prevCam) * a;
   draw();
+  player.x = realX; player.y = realY; cameraX = realCam;
 }
 draw();
 requestAnimationFrame(loop);
