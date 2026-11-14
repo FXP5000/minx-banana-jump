@@ -1498,16 +1498,16 @@ function drawHUD() {
     ctx.strokeRect(barX + i * (secW + 4), barY, secW, barH);
     ctx.lineWidth = 1;
   }
-  // banana counter + progress dots to the next life (counts 1,2,3)
+  // banana counter + progress squares to the next life (counts 1..5)
   drawBanana(262, 10);
   ctx.fillStyle = '#ffffff'; ctx.font = '12px "Press Start 2P", monospace';
   ctx.fillText('× ' + totalBananas, 292, 30);
-  const prog = totalBananas % 3;
-  for (let i = 0; i < 3; i++) {
-    px(392 + i * 20 - 6, 17, 12, 12, i < prog ? '#ffd83d' : 'rgba(255,255,255,0.25)');
+  const prog = totalBananas % 5;
+  for (let i = 0; i < 5; i++) {
+    px(386 + i * 20 - 6, 17, 12, 12, i < prog ? '#ffd83d' : 'rgba(255,255,255,0.25)');
   }
   ctx.fillStyle = '#b8e6a0'; ctx.font = '12px "Courier New", monospace';
-  ctx.fillText('3 = +1 life', 458, 28);
+  ctx.fillText('5 = +1 life', 492, 28);
   // score + level, right side
   ctx.fillStyle = '#ffffff'; ctx.font = '11px "Press Start 2P", monospace'; ctx.textAlign = 'right';
   ctx.fillText(level.endless ? 'ENDLESS SCORE ' + endlessScore() : 'SCORE ' + score, W - 12, 29);
