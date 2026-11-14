@@ -96,7 +96,7 @@
   <div class="sub">An 8-bit jungle game — jump and collect!</div>
 
   <div id="wrap">
-    <canvas id="game" width="400" height="225"></canvas>
+    <canvas id="game" width="800" height="450"></canvas>
     <div id="overlay">
       <h2 id="ov-title">MINX'S BANANA JUMP</h2>
       <p id="ov-text">Help Minx the monkey collect bananas!<br>
@@ -174,10 +174,8 @@
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-// EVERYTHING is pixelated (Finbar): the game renders at HALF resolution
-// (400x225) and the page stretches it up with image-rendering: pixelated,
-// so every tree, vine, word and monkey comes out in chunky pixels.
-ctx.scale(0.5, 0.5);
+// EVERYTHING is pixelated (Finbar) but CRISP: full resolution, and every
+// shape snaps to a chunky pixel grid (see px/blob) — no blur, no smearing.
 const W = canvas.width, H = canvas.height;
 ctx.imageSmoothingEnabled = false;
 
@@ -965,7 +963,19 @@ function update() {
 }
 
 /* ---------- drawing (chunky pixels, no image files) ---------- */
-function px(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
+function px(x, y, w, h, color) {
+  // CRISP PIXELS (Finbar): everything snaps to a chunky 2px grid at FULL
+  // resolution — pixelated, but sharp and clear, never blurry.
+  ctx.fillStyle = color;
+  ctx.fillRect(Math.round(x / 2) * 2, Math.round(y / 2) * 2, Math.max(2, Math.round(w / 2) * 2), Math.max(2, Math.round(h / 2) * 2));
+}
+// a circle made of pixel blocks (no smooth anti-aliased arcs anywhere)
+function blob(cx, cy, r, color) {
+  for (let dy = -r; dy < r; dy += 4) {
+    const half = Math.sqrt(Math.max(0, r * r - dy * dy));
+    px(cx - half, cy + dy, half * 2, 4, color);
+  }
+}
 
 function drawBackground() {
   // CROWDED JUNGLE: the canopy fills the whole screen — there is no sky to see.
@@ -975,24 +985,20 @@ function drawBackground() {
   for (let r = 0; r < 5; r++) {
     for (let i = 0; i < 14; i++) {
       const cx = ((i * 74 + r * 37 - cameraX * (0.22 + r * 0.07)) % (W + 140) + W + 140) % (W + 140) - 70;
-      ctx.fillStyle = greens[(i + r) % greens.length];
-      ctx.beginPath(); ctx.arc(cx, 6 + r * 52 + ((i * 13 + r * 7) % 18), 46 + ((i * 29 + r * 11) % 22), 0, 6.29); ctx.fill();
+      blob(cx, 6 + r * 52 + ((i * 13 + r * 7) % 18), 46 + ((i * 29 + r * 11) % 22), greens[(i + r) % greens.length]);
     }
   }
   // dappled light spots filtering through the leaves (not sky — just glow)
-  ctx.fillStyle = 'rgba(220,255,180,0.13)';
   for (let i = 0; i < 10; i++) {
     const dx = ((i * 173 - cameraX * 0.3) % (W + 120) + W + 120) % (W + 120) - 60;
-    ctx.beginPath(); ctx.arc(dx, 40 + (i % 4) * 52, 13 + (i % 3) * 5, 0, 6.29); ctx.fill();
+    blob(dx, 40 + (i % 4) * 52, 13 + (i % 3) * 5, 'rgba(220,255,180,0.13)');
   }
   // a thicket of trunks below the canopy, packed across the screen
   for (let i = 0; i < 10; i++) {
     const tx = ((i * 105 - cameraX * 0.55) % (W + 140) + W + 140) % (W + 140) - 70;
     px(tx + 26, 196, 13 + (i % 3) * 3, GROUND_Y - 186, '#4e342e');
-    ctx.fillStyle = greens[(i + 2) % greens.length];
-    ctx.beginPath(); ctx.arc(tx + 32, 208, 56, 0, 6.29); ctx.fill();
-    ctx.fillStyle = greens[i % greens.length];
-    ctx.beginPath(); ctx.arc(tx + 6, 232, 34, 0, 6.29); ctx.fill();
+    blob(tx + 32, 208, 56, greens[(i + 2) % greens.length]);
+    blob(tx + 6, 232, 34, greens[i % greens.length]);
   }
   // dense bushes along the floor behind the play area
   for (let wx = Math.floor(cameraX / 84) * 84 - 84; wx < cameraX + W + 84; wx += 84) {   // camera-bounded (works for the endless world too)
@@ -1052,11 +1058,38 @@ function drawBackground() {
 }
 
 function drawWorld() {
-  // the creek — layered water with a stony bed, ripples and pebbles, not plain flat water
-  px(0, WATER_Y, W, H - WATER_Y, '#29b6f6');
-  px(0, WATER_Y, W, 5, '#b3e5fc');                       // bright surface line
-  px(0, WATER_Y + 15, W, 9, '#039be5');                  // deeper band
-  px(0, WATER_Y + 30, W, H - WATER_Y - 30, '#0277bd');   // creek bed depths
+  // THE CREEK — world-anchored water that only exists where there is NO
+  // ground (Finbar's "big blue giant box" was the old screen-wide flat band).
+  // Each stretch of water sits between dirt banks, with a stepped pixel
+  // surface, so it reads as a creek running through the jungle.
+  const spans = [];
+  {
+    const gs = (level.grounds || []).map(g => [g[0], g[0] + g[1]]).sort((a, b) => a[0] - b[0]);
+    let cur = 0;
+    for (const g of gs) { if (g[0] > cur) spans.push([cur, g[0]]); cur = Math.max(cur, g[1]); }
+    spans.push([cur, level.endless ? cameraX + W + 200 : level.world]);
+  }
+  const inWater = (wx) => spans.some(s => wx >= s[0] - 4 && wx < s[1]);
+  for (const s of spans) {
+    const sx = Math.max(0, s[0] - cameraX), ex = Math.min(W, s[1] - cameraX);
+    if (ex <= 0 || sx >= W) continue;
+    const wdt = ex - sx;
+    px(sx, WATER_Y + 10, wdt, H - WATER_Y - 10, '#0277bd');        // deep water
+    px(sx, WATER_Y + 4, wdt, 8, '#039be5');                        // mid band
+    for (let bx = sx - (sx % 16); bx < ex; bx += 16) {             // stepped pixel surface (little 2px waves)
+      const wob = Math.abs(Math.sin((bx + cameraX) * 0.11)) < 0.5 ? 0 : 2;
+      px(bx, WATER_Y + wob, Math.min(16, ex - bx), 4, '#4fc3f7');
+    }
+  }
+  // dirt banks where the water meets the land
+  for (const s of spans) {
+    for (const edge of [s[0], s[1]]) {
+      const sx = edge - cameraX; if (sx < -16 || sx > W + 8) continue;
+      px(sx - 4, GROUND_Y - 2, 8, 10, '#6d4c2f');
+      px(sx - 6, GROUND_Y + 6, 12, 8, '#5d4037');
+      px(sx - 3, GROUND_Y - 5, 6, 4, '#43a047');                    // grass lip on the bank
+    }
+  }
   // drifting ripples (two rows, sliding slowly downstream)
   ctx.fillStyle = '#e1f5fe';
   const rip = Math.floor(Date.now() / 90) % 46;
@@ -1068,6 +1101,7 @@ function drawWorld() {
   // pebbles and stones along the creek (world-anchored, some half in the water) — with moss on top
   for (let wx = Math.floor(cameraX / 150) * 150 + 24; wx < cameraX + W + 60; wx += 150) {
     const sx = wx - cameraX; if (sx < -40 || sx > W + 20) continue;
+    if (!inWater(wx + 10)) continue;   // stones only where the creek actually is
     px(sx, WATER_Y - 3, 28, 9, '#90a4ae');
     px(sx + 6, WATER_Y - 6, 15, 5, '#b0bec5');
     px(sx + 3, WATER_Y - 8, 20, 4, '#43a047');            // moss cap
@@ -1077,6 +1111,7 @@ function drawWorld() {
   // fallen logs floating in the creek, with moss growing on them
   for (let wx = Math.floor(cameraX / 340) * 340 + 300; wx < cameraX + W + 120; wx += 340) {
     const sx = wx - cameraX; if (sx < -110 || sx > W + 30) continue;
+    if (!inWater(wx + 40)) continue;   // floating logs only on water
     px(sx, WATER_Y + 11, 84, 15, '#6d4c2f');
     px(sx, WATER_Y + 11, 84, 5, '#8d6e63');
     px(sx + 78, WATER_Y + 11, 7, 15, '#a1887f');          // cut end of the log
@@ -1105,7 +1140,7 @@ function drawWorld() {
     px(mid - 8, 88, 16, 60, '#5d4037');
     // the crown: big overlapping leafy circles, wider than the trunk
     const crown = [[mid, 84, 108, '#1b5e20'], [mid - 112, 112, 80, '#2e7d32'], [mid + 112, 112, 80, '#256b29'], [mid - 52, 62, 66, '#388e3c'], [mid + 58, 58, 62, '#2e7d32'], [mid - 150, 138, 52, '#1e6b24'], [mid + 150, 138, 52, '#1b5e20']];
-    for (const c of crown) { ctx.fillStyle = c[3]; ctx.beginPath(); ctx.arc(c[0], c[1], c[2], 0, 6.29); ctx.fill(); }
+    for (const c of crown) blob(c[0], c[1], c[2], c[3]);
     // bananas growing in the crown — it IS a banana-jungle tree
     drawBanana(mid - 128, 96); drawBanana(mid + 96, 76); drawBanana(mid - 18, 44);
     // hanging moss strands from the crown
@@ -1115,8 +1150,8 @@ function drawWorld() {
     px(tx0, 140, tw, 10, '#795548');
     for (let bx = tx0 + 22; bx < tx1 - 10; bx += 52) px(bx, 150, 6, 76, '#5d4037');   // bark stripes
     const kx = tx0 + 190 + (tr[0] % 260);                   // a knot in the wood
-    ctx.fillStyle = '#4e342e'; ctx.beginPath(); ctx.arc(kx, 188, 11, 0, 6.29); ctx.fill();
-    ctx.fillStyle = '#3e2723'; ctx.beginPath(); ctx.arc(kx, 188, 5, 0, 6.29); ctx.fill();
+    blob(kx, 188, 11, '#4e342e');
+    blob(kx, 188, 5, '#3e2723');
     px(tx0, 226, tw, 6, '#4e342e');                         // roof edge line
     px(tx0, 232, tw, GROUND_Y - 232, '#4e342e');            // the hollow inside (back wall)
     px(tx0, 300, tw, 4, '#3e2723'); px(tx0, 348, tw, 4, '#3e2723');   // carved rings inside
@@ -1159,14 +1194,16 @@ function drawWorld() {
     px(sx + p[2] - 52, p[1] - 3, 26, 4, '#388e3c');
     px(sx + 30, p[1] + 13, 18, 5, '#2e7d32');             // moss dripping underneath
   }
-  // vines
+  // vines — drawn as stepped pixel blocks, not a smooth line
   for (const v of vines) {
     const topX = v.ax - cameraX; if (topX < -160 || topX > W + 160) continue;
     const endX = topX + Math.sin(v.angle) * v.len;
     const endY = v.ay + Math.cos(v.angle) * v.len;
-    ctx.strokeStyle = '#2e7d32'; ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.moveTo(topX, v.ay); ctx.lineTo(endX, endY); ctx.stroke();
-    ctx.lineWidth = 1;
+    const steps = Math.floor(v.len / 8);
+    for (let sIdx = 0; sIdx <= steps; sIdx++) {
+      const t = sIdx / steps;
+      px(topX + (endX - topX) * t - 3, v.ay + (endY - v.ay) * t - 3, 6, 8, sIdx % 2 ? '#2e7d32' : '#388e3c');
+    }
     px(topX - 22, v.ay - 8, 44, 12, '#388e3c');
     px(endX - 5, endY - 4, 10, 10, '#43a047');
   }
@@ -1302,10 +1339,7 @@ function drawHUD() {
   ctx.fillText('× ' + totalBananas, 292, 30);
   const prog = totalBananas % 3;
   for (let i = 0; i < 3; i++) {
-    ctx.beginPath();
-    ctx.arc(392 + i * 20, 23, 7, 0, 6.29);
-    ctx.fillStyle = i < prog ? '#ffd83d' : 'rgba(255,255,255,0.25)';
-    ctx.fill();
+    px(392 + i * 20 - 6, 17, 12, 12, i < prog ? '#ffd83d' : 'rgba(255,255,255,0.25)');
   }
   ctx.fillStyle = '#b8e6a0'; ctx.font = '12px "Courier New", monospace';
   ctx.fillText('3 = +1 life', 458, 28);
