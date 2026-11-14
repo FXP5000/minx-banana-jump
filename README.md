@@ -12,8 +12,10 @@ Minx **runs forward all by himself** — there's just **one key** to learn:
 
 - **Jump:** SPACE (or click / tap the game — on phones/tablets there's one big TAP TO JUMP button)
 - **Grab a vine (Level 2):** jump toward it — Minx grabs on automatically
-- **Let go of a vine:** SPACE again
+- **Let go of a vine:** SPACE again — the same jump button (after letting go, Minx can't grab straight back on for a moment, so letting go really works)
 - **Restart the level:** R
+
+Minx runs at a calm, slower speed, and the platforms are wide and spread out, so jumps feel easy. The vines are long — the swing reaches right over the next platform. Behind it all is a full, leafy jungle, and the water is a stony creek with ripples and pebbles.
 
 Minx has a **running animation** (pumping legs and arms, a little bob) and a **jumping animation** (arms up, legs tucked, "ooh!" face).
 

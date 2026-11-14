@@ -175,60 +175,58 @@ const LEVELS = [
   {
     name: 'Level 1 — Little Hops',
     intro: 'Minx runs on his own — press SPACE to jump from platform to platform over the water!',
-    world: 2660,
+    world: 2560,
     grounds: [[0, 360]],                        // solid ground ONLY at the start…
-    platforms: [                                // …after that, platforms over water are the only way across
-      [150, 338, 96], [292, 292, 96], [434, 246, 96], [576, 292, 96], [718, 338, 96],
-      [860, 292, 96], [1002, 246, 96], [1144, 292, 96], [1286, 338, 96],
-      [1428, 292, 96], [1570, 246, 96], [1712, 292, 96], [1854, 338, 96],
-      [1996, 292, 96], [2138, 246, 96], [2280, 202, 96],
-      [2410, 202, 190],                         // the golden-tree platform (the finish)
+    platforms: [                                // …after that, platforms over the creek are the only way across — wide and spread out, for calm, easy jumps at Minx's slower speed
+      [150, 338, 124], [332, 292, 124], [514, 246, 124], [696, 292, 124], [878, 338, 124],
+      [1060, 292, 124], [1242, 246, 124], [1424, 292, 124], [1606, 338, 124],
+      [1788, 292, 124], [1970, 246, 124], [2152, 202, 124],
+      [2310, 202, 200],                         // the golden-tree platform (the finish)
     ],
     bananas: [
-      [190, 306], [332, 260], [474, 214], [616, 260], [758, 306],
-      [900, 260], [1042, 214], [1184, 260], [1326, 306],
-      [1468, 260], [1610, 214], [1752, 260], [1894, 306],
-      [2036, 260], [2178, 214], [2320, 170],
+      [200, 306], [382, 260], [564, 214], [746, 260], [928, 306],
+      [1110, 260], [1292, 214], [1474, 260], [1656, 306],
+      [1838, 260], [2020, 214], [2202, 170],
       [80, 352],
     ],
     vines: [],
-    goalX: 2460,
+    goalX: 2370,
     goalY: 202,                                 // finish counts only UP on the tree platform — never from underneath
   },
   {
     name: 'Level 2 — Vine Swings',
     intro: 'Minx keeps running! Jump to grab a vine, swing gently, SPACE again to let go!',
-    world: 2700,
+    world: 2960,
     grounds: [[0, 360]],                        // like Level 1: solid ground ONLY at the start…
-    platforms: [                                // …then platform clusters over water, linked by vines — no running underneath, ever
+    platforms: [                                // …then platform clusters over the creek, linked by LONG vines — no running underneath, ever
       // cluster A
-      [150, 338, 96], [292, 292, 96], [434, 246, 96], [576, 292, 96], [718, 338, 96],
-      // (vine 1 crosses from here)
-      [1070, 330, 140],
+      [150, 338, 124], [332, 292, 124], [514, 246, 124], [696, 292, 124],
+      // (vine 1 crosses from here — it reaches all the way to the landing platform)
+      [1080, 340, 150],
       // cluster B
-      [1252, 284, 96], [1394, 238, 96], [1536, 284, 96],
+      [1258, 294, 124], [1440, 248, 124], [1622, 294, 124],
       // (vine 2 crosses from here)
-      [1880, 330, 140],
+      [2006, 340, 150],
       // cluster C, climbing to the tree
-      [2062, 284, 96], [2204, 238, 96], [2346, 192, 96],
-      [2470, 192, 190],                         // the golden-tree platform (the finish)
+      [2184, 294, 124], [2366, 248, 124], [2548, 202, 124],
+      [2706, 202, 200],                         // the golden-tree platform (the finish)
     ],
     bananas: [
-      [190, 306], [332, 260], [474, 214], [616, 260], [758, 306],
-      [940, 262],                       // mid-swing prize over the first vine gap
-      [1120, 298],
-      [1292, 252], [1434, 206], [1576, 252],
-      [1750, 262],                      // mid-swing prize over the second vine gap
-      [1930, 298],
-      [2102, 252], [2244, 206], [2386, 160],
+      [200, 306], [382, 260], [564, 214], [746, 260],
+      [945, 315],                       // mid-swing prize on the first vine
+      [1130, 308],
+      [1308, 262], [1490, 216], [1672, 262],
+      [1876, 315],                      // mid-swing prize on the second vine
+      [2056, 308],
+      [2234, 262], [2416, 216], [2598, 170],
       [80, 352],
     ],
     vines: [
-      [950, 60, 200],                   // cluster A (ends x=814) -> landing platform at x=1070
-      [1760, 60, 200],                  // cluster B (ends x=1632) -> landing platform at x=1880
+      [960, 60, 260],                   // cluster A (ends x=820) -> landing platform at x=1080: the swing reaches right over it
+      [1886, 60, 260],                  // cluster B (ends x=1746) -> landing platform at x=2006: the swing reaches right over it
     ],
-    goalX: 2520,
-    goalY: 192,                                 // finish counts only UP on the tree platform — never from underneath
+    goalX: 2766,
+    goalY: 202,                                 // finish counts only UP on the tree platform — never from underneath
   },
 ];
 
@@ -246,6 +244,7 @@ let banner = null;              // big centre message: {text, t}
 const player = {
   x: 40, y: GROUND_Y - 40, w: 34, h: 40, vx: 0, vy: 0,
   onGround: false, face: 1, coyote: 0, animT: 0,
+  grabCooldown: 0,              // after letting go of a vine, Minx can't re-grab one until this runs out — this is what makes SPACE actually let go
   swinging: null,               // vine object while swinging
   safeX: 40, safeY: GROUND_Y - 40,
 };
@@ -260,7 +259,7 @@ function startLevel(idx, keepLives) {
   bananasLeft = level.bananas.map(b => ({ x: b[0], y: b[1], taken: false, bob: Math.random() * 6.28 }));
   vines = level.vines.map(v => ({ ax: v[0], ay: v[1], len: v[2], angle: 0, t: Math.random() * 6.28 }));
   player.x = 40; player.y = GROUND_Y - player.h;
-  player.vx = 0; player.vy = 0; player.swinging = null;
+  player.vx = 0; player.vy = 0; player.swinging = null; player.grabCooldown = 0;
   player.safeX = 40; player.safeY = player.y;
   cameraX = 0; popups = [];
   startTimer = 45;
@@ -344,7 +343,7 @@ function showOverlay(title, html, btnLabel, onClick) {
 ovBtn.onclick = newGame;
 
 /* ---------- physics & update ---------- */
-const GRAV = 0.6, MOVE = 3.4, JUMP = -11;   // gentle jump: rises about 100px — one platform step (46–54px), never two
+const GRAV = 0.6, MOVE = 2.8, JUMP = -11;   // gentle jump (~100px — one platform step, never two) and a slower, calmer auto-run speed; platforms are wider and spread further apart to match
 
 function solids() {
   const list = [];
@@ -358,6 +357,7 @@ function update() {
   if (startTimer > 0) { startTimer--; return; }   // "get ready" — Minx waits, then runs on his own
   if (banner && --banner.t <= 0) banner = null;
   popups = popups.filter(p => --p.t > 0);
+  if (player.grabCooldown > 0) player.grabCooldown--;
 
   // Vines swing OUT FAR all the time (wide arc, slow and gentle), so the rope
   // end sweeps toward Minx as he runs up — much easier to jump onto.
@@ -371,11 +371,12 @@ function update() {
     v.angle = Math.sin(v.t) * 0.62;                       // smaller arc — no fast flying
     player.x = v.ax + Math.sin(v.angle) * v.len - player.w / 2;
     player.y = v.ay + Math.cos(v.angle) * v.len;
-    if (jumpPressed) {                                    // let go — with a soft, gentle push
+    if (jumpPressed) {                                    // the JUMP button lets go — with a soft, gentle push…
       const dxPerFrame = Math.cos(v.angle) * v.len * 0.62 * Math.cos(v.t) * 0.022;
       player.vx = dxPerFrame * 1.7;
       player.vy = -3.2;
       player.swinging = null;
+      player.grabCooldown = 50;                           // …and he can't grab straight back on, so letting go really works
       sfx.swing();
     }
     jumpPressed = false;
@@ -414,6 +415,7 @@ function update() {
     // rope end, he catches it. A big, forgiving target for kids, and the
     // vine keeps its own gentle rhythm (its phase is NOT reset on a grab).
     for (const v of vines) {
+      if (player.grabCooldown > 0) break;                 // just let go of a vine — fly free for a moment first
       const endX = v.ax + Math.sin(v.angle) * v.len;
       const endY = v.ay + Math.cos(v.angle) * v.len;
       const handX = player.x + player.w / 2, handY = player.y + 6;
@@ -460,28 +462,67 @@ function drawBackground() {
     const cy = 28 + (i % 3) * 22;
     ctx.fillRect(cx, cy, 64, 14); ctx.fillRect(cx + 14, cy - 10, 36, 10);
   }
-  // far jungle hills
-  ctx.fillStyle = '#5da75d';
-  for (let i = 0; i < 8; i++) {
-    const hx = ((i * 220 - cameraX * 0.5) % (W + 220) + W + 220) % (W + 220) - 110;
-    ctx.beginPath(); ctx.arc(hx, GROUND_Y + 40, 120, Math.PI, 0); ctx.fill();
+  // FULL jungle, layer 1: a wall of far canopy — overlapping tree tops with no gaps
+  for (let i = 0; i < 12; i++) {
+    const hx = ((i * 110 - cameraX * 0.35) % (W + 160) + W + 160) % (W + 160) - 80;
+    ctx.fillStyle = '#4e9a51';
+    ctx.beginPath(); ctx.arc(hx, 205 + (i % 3) * 16, 78, 0, 6.29); ctx.fill();
+    ctx.fillStyle = '#5da75d';
+    ctx.beginPath(); ctx.arc(hx - 18, 188 + (i % 3) * 16, 46, 0, 6.29); ctx.fill();
   }
-  // background trees
-  for (let wx = 60; wx < level.world; wx += 230) {
-    const sx = wx - cameraX; if (sx < -90 || sx > W + 40) continue;
-    px(sx + 26, GROUND_Y - 118, 14, 118, '#6d4c2f');
-    px(sx, GROUND_Y - 168, 66, 56, '#2e7d32');
-    px(sx + 10, GROUND_Y - 188, 46, 24, '#388e3c');
+  // FULL jungle, layer 2: nearer trees packed right across the screen
+  for (let i = 0; i < 9; i++) {
+    const tx = ((i * 150 - cameraX * 0.6) % (W + 180) + W + 180) % (W + 180) - 90;
+    const th = 120 + (i % 3) * 26;
+    px(tx + 30, GROUND_Y - th + 52, 13, th - 52, '#5d4037');
+    px(tx, GROUND_Y - th, 74, 58, '#2e7d32');
+    px(tx + 12, GROUND_Y - th - 20, 50, 26, '#388e3c');
+    px(tx + 4, GROUND_Y - th + 38, 20, 16, '#43a047');
+  }
+  // jungle floor bushes behind the play area, so the bottom is filled too
+  for (let wx = 30; wx < level.world; wx += 120) {
+    const sx = wx - cameraX; if (sx < -80 || sx > W + 40) continue;
+    px(sx, GROUND_Y - 22, 52, 24, '#1b5e20');
+    px(sx + 8, GROUND_Y - 32, 34, 14, '#2e7d32');
+    px(sx + 16, GROUND_Y - 12, 5, 12, '#43a047'); px(sx + 30, GROUND_Y - 14, 5, 14, '#43a047');
   }
 }
 
 function drawWorld() {
-  // water — fills the bottom wherever there is no ground
+  // the creek — layered water with a stony bed, ripples and pebbles, not plain flat water
   px(0, WATER_Y, W, H - WATER_Y, '#29b6f6');
-  px(0, WATER_Y, W, 6, '#81d4fa');
+  px(0, WATER_Y, W, 5, '#b3e5fc');                       // bright surface line
+  px(0, WATER_Y + 15, W, 9, '#039be5');                  // deeper band
+  px(0, WATER_Y + 30, W, H - WATER_Y - 30, '#0277bd');   // creek bed depths
+  // drifting ripples (two rows, sliding slowly downstream)
   ctx.fillStyle = '#e1f5fe';
-  const waveOff = Math.floor(Date.now() / 400) % 24;
-  for (let wx = -24 + waveOff; wx < W; wx += 24) ctx.fillRect(wx, WATER_Y + 3, 12, 3);
+  const rip = Math.floor(Date.now() / 90) % 46;
+  for (let wx = Math.floor(cameraX / 46) * 46 - 46; wx < cameraX + W + 46; wx += 46) {
+    const sx = wx - cameraX + rip;
+    ctx.fillRect(sx, WATER_Y + 8, 17, 3);
+    ctx.fillRect(sx + 20, WATER_Y + 21, 13, 3);
+  }
+  // pebbles and stones along the creek (world-anchored, some half in the water)
+  for (let wx = 24; wx < level.world; wx += 150) {
+    const sx = wx - cameraX; if (sx < -40 || sx > W + 20) continue;
+    px(sx, WATER_Y - 3, 28, 9, '#90a4ae');
+    px(sx + 6, WATER_Y - 6, 15, 5, '#b0bec5');
+    px(sx + 44, WATER_Y + 17, 13, 6, '#78909c');
+  }
+  // reeds at the water's edge of every ground bank
+  for (const g of level.grounds) {
+    for (const edgeX of [g[0] + 2, g[0] + g[1] - 8]) {
+      const sx = edgeX - cameraX; if (sx < -12 || sx > W + 6) continue;
+      px(sx, GROUND_Y - 15, 3, 17, '#2e7d32');
+      px(sx + 5, GROUND_Y - 20, 3, 22, '#388e3c');
+    }
+  }
+  // hanging jungle vines in the background (decoration only — the swinging ones come later)
+  for (let wx = 130; wx < level.world; wx += 210) {
+    const sx = wx - cameraX; if (sx < -20 || sx > W + 20) continue;
+    px(sx, 44, 4, 74 + (wx % 3) * 18, '#1b5e20');
+    px(sx - 5, 66, 12, 7, '#2e7d32'); px(sx - 4, 96, 10, 7, '#2e7d32');
+  }
   // grounds
   for (const g of level.grounds) {
     const sx = g[0] - cameraX; if (sx + g[1] < 0 || sx > W) continue;
