@@ -952,7 +952,10 @@ function px(x, y, w, h, color) {
 function barkTexture(x, y, w, h, seed) {
   for (let gx = x + 5 + (seed % 5); gx < x + w - 3; gx += 11) {           // dark grooves, wobbling as they climb
     for (let gy = y + 2; gy < y + h - 6; gy += 10) {
-      const off = ((gx * 7 + gy * 13 + seed) % 3) - 1;
+      // the wobble MUST come from LOCAL coordinates (gx - x, gy - y):
+      // using screen x made every groove jump sideways as the camera
+      // moved — the wood looked like it was shaking (same bug the creek had).
+      const off = (((gx - x) * 7 + (gy - y) * 13 + seed) % 3) - 1;
       px(gx + off, gy, 3, 9, '#4e342e');
     }
   }
@@ -1139,6 +1142,19 @@ function drawWorld() {
     // the crown: big overlapping leafy circles, wider than the trunk
     const crown = [[mid, 84, 108, '#1b5e20'], [mid - 112, 112, 80, '#2e7d32'], [mid + 112, 112, 80, '#256b29'], [mid - 52, 62, 66, '#388e3c'], [mid + 58, 58, 62, '#2e7d32'], [mid - 150, 138, 52, '#1e6b24'], [mid + 150, 138, 52, '#1b5e20']];
     for (const c of crown) blob(c[0], c[1], c[2], c[3]);
+    // LEAF DETAILS (Finbar): light and shadow leaf clusters speckled over
+    // the crown, tiny jungle flowers, and leaf tufts — all placed from the
+    // tree's WORLD position, so they stay glued to the leaves.
+    for (let i = 0; i < 40; i++) {
+      const hx = mid + ((tr[0] * 7 + i * 53) % 320) - 160;
+      const hy = 16 + ((tr[0] * 3 + i * 37) % 150);
+      const ex2 = (hx - mid) / 205, ey2 = (hy - 88) / 92;
+      if (ex2 * ex2 + ey2 * ey2 > 1) continue;                       // keep speckles inside the crown's leafy oval
+      px(hx, hy, 7, 5, i % 3 ? '#43a047' : '#81c784');               // sunlit leaf cluster
+      if (i % 4 === 0) px(hx + 2, hy + 6, 5, 4, '#14521a');          // shadowed leaves underneath
+      if (i % 9 === 0) { px(hx + 1, hy - 4, 4, 4, '#ff80ab'); px(hx + 2, hy - 3, 2, 2, '#fff59d'); }   // tiny flower
+    }
+    for (const mx of [mid - 168, mid + 158]) { px(mx, 128, 4, 34, '#2e7d32'); px(mx - 4, 156, 12, 8, '#43a047'); px(mx - 1, 164, 6, 6, '#66bb6a'); }  // extra hanging leaf strands at the crown's edges
     // bananas growing in the crown — it IS a banana-jungle tree
     drawBanana(mid - 128, 96); drawBanana(mid + 96, 76); drawBanana(mid - 18, 44);
     // hanging moss strands from the crown
