@@ -1344,23 +1344,29 @@ function drawWorld() {
 }
 
 function drawBanana(x, y) {
-  // A SMOOTH banana (Finbar: the old blocky segmented one looked like a
-  // cut-up mango). One solid golden silhouette swept along a gentle smile
-  // arc — overlapping pixel blobs merge into a single smooth shape, with
-  // NO segment lines and NO ridge. Just a soft sheen on top, a little
-  // brown stem, and a pointed tip.
-  const cx = x + 13, cy = y + 3;
-  for (let t = 0; t <= 10; t++) {
-    const dx = t - 5;
-    const bx = cx + dx * 2.4;
-    const by = cy + 7 - (dx * dx) / 3.6;                 // the smile curve: middle low, tips up
-    const r = 4.6 - Math.abs(dx) * 0.42;                 // thick in the middle, tapering to the tips
-    blob(bx, by, r, '#ffd83d');                          // the body, one colour
-    blob(bx - 1, by - 2, Math.max(1.6, r * 0.52), '#fff59d');   // soft sheen along the top
+  // A SMOOTH PIXEL BANANA (Finbar): a clean sprite drawn row by row, the
+  // way real pixel art is made — one flat golden fill in a crescent
+  // silhouette, a light band along the top curve, a shaded band along the
+  // bottom, a little stem. No circles, no blobs, no rivets or ridges.
+  const ROWS = [
+    [[3, 7], [19, 23]],
+    [[2, 8], [18, 24]],
+    [[2, 9], [17, 24]],
+    [[3, 11], [15, 23]],
+    [[4, 13], [13, 21]],
+    [[5, 20]],
+    [[6, 19]],
+    [[7, 18]],
+    [[8, 17]]
+  ];
+  for (let r = 0; r < ROWS.length; r++) {
+    const col = r >= 7 ? '#f9a825' : '#ffd83d';            // shaded band along the bottom curve
+    for (const run of ROWS[r]) px(x + run[0], y + r * 2, run[1] - run[0], 2, col);
   }
-  px(cx - 14, cy - 3, 4, 6, '#6d4c2f');                  // stem at the top-left tip
-  px(cx - 13, cy - 5, 3, 3, '#8bc34a');
-  px(cx + 12, cy + 1, 3, 3, '#f9a825');                  // the pointed right tip
+  px(x + 6, y + 6, 9, 2, '#fff59d');                        // light band along the top curve
+  px(x + 7, y + 8, 7, 2, '#fff59d');
+  px(x + 3, y - 3, 4, 4, '#6d4c2f');                        // stem
+  px(x + 4, y - 4, 2, 2, '#8bc34a');
 }
 function drawMonkey() {
   const x = player.x - cameraX;
