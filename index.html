@@ -17,7 +17,7 @@
   .sub { color: #b8e6a0; font-size: 14px; margin-bottom: 10px; text-align:center; }
   #wrap { position: relative; width: min(960px, 100%); }
   canvas {
-    width: 100%; height: auto; display: block; background: #79c7e8;
+    width: 100%; height: auto; display: block; background: #123d17;
     border: 4px solid #0e2412; border-radius: 6px;
     image-rendering: pixelated; image-rendering: crisp-edges;
     touch-action: none;
@@ -146,6 +146,7 @@ addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'r' && state === 'playing') { totalBananas = levelStart.bananas; score = levelStart.score; startLevel(levelIndex, true); }
 });
 addEventListener('keyup', (e) => {
+  if (e.key === ' ') e.preventDefault();   // stopping the keyup too, so SPACE can never "click" a focused button
   keys[e.key.toLowerCase()] = false;
   if (e.key === ' ') keys.jump = false;
 });
@@ -175,58 +176,57 @@ const LEVELS = [
   {
     name: 'Level 1 — Little Hops',
     intro: 'Minx runs on his own — press SPACE to jump from platform to platform over the water!',
-    world: 2560,
-    grounds: [[0, 360]],                        // solid ground ONLY at the start…
-    platforms: [                                // …after that, platforms over the creek are the only way across — wide and spread out, for calm, easy jumps at Minx's slower speed
-      [150, 338, 124], [332, 292, 124], [514, 246, 124], [696, 292, 124], [878, 338, 124],
-      [1060, 292, 124], [1242, 246, 124], [1424, 292, 124], [1606, 338, 124],
-      [1788, 292, 124], [1970, 246, 124], [2152, 202, 124],
-      [2310, 202, 200],                         // the golden-tree platform (the finish)
+    world: 3360,
+    grounds: [[0, 420]],                        // solid ground ONLY at the start…
+    platforms: [                                // …after that, platforms over the creek are the only way across — MUCH wider and spread WAY out, with gentle height steps, so every jump is easy
+      [170, 338, 180], [432, 296, 180], [694, 254, 180], [956, 296, 180], [1218, 338, 180],
+      [1480, 296, 180], [1742, 254, 180], [2004, 296, 180], [2266, 338, 180],
+      [2528, 296, 180], [2790, 254, 180], [3050, 212, 220],
     ],
     bananas: [
-      [200, 306], [382, 260], [564, 214], [746, 260], [928, 306],
-      [1110, 260], [1292, 214], [1474, 260], [1656, 306],
-      [1838, 260], [2020, 214], [2202, 170],
-      [80, 352],
+      [248, 306], [510, 264], [772, 222], [1034, 264], [1296, 306],
+      [1558, 264], [1820, 222], [2082, 264], [2344, 306],
+      [2606, 264], [2868, 222], [3130, 180],
+      [90, 352],
     ],
     vines: [],
-    goalX: 2370,
-    goalY: 202,                                 // finish counts only UP on the tree platform — never from underneath
+    goalX: 3110,
+    goalY: 212,                                 // finish counts only UP on the tree platform — never from underneath
   },
   {
     name: 'Level 2 — Vine Swings',
     intro: 'Minx keeps running! Jump to grab a vine, swing gently, SPACE again to let go!',
-    world: 2960,
-    grounds: [[0, 360]],                        // like Level 1: solid ground ONLY at the start…
-    platforms: [                                // …then platform clusters over the creek, linked by LONG vines — no running underneath, ever
+    world: 4370,
+    grounds: [[0, 420]],                        // like Level 1: solid ground ONLY at the start…
+    platforms: [                                // …then wide, spread-out platform clusters over the creek, linked by LONG vines — no running underneath, ever
       // cluster A
-      [150, 338, 124], [332, 292, 124], [514, 246, 124], [696, 292, 124],
+      [170, 338, 180], [432, 296, 180], [694, 254, 180], [956, 296, 180],
       // (vine 1 crosses from here — it reaches all the way to the landing platform)
-      [1080, 340, 150],
+      [1400, 340, 190],
       // cluster B
-      [1258, 294, 124], [1440, 248, 124], [1622, 294, 124],
+      [1852, 298, 180], [2114, 256, 180], [2376, 298, 180],
       // (vine 2 crosses from here)
-      [2006, 340, 150],
+      [2820, 340, 190],
       // cluster C, climbing to the tree
-      [2184, 294, 124], [2366, 248, 124], [2548, 202, 124],
-      [2706, 202, 200],                         // the golden-tree platform (the finish)
+      [3272, 298, 180], [3534, 256, 180], [3796, 214, 180],
+      [4058, 214, 220],                         // the golden-tree platform (the finish)
     ],
     bananas: [
-      [200, 306], [382, 260], [564, 214], [746, 260],
-      [945, 315],                       // mid-swing prize on the first vine
-      [1130, 308],
-      [1308, 262], [1490, 216], [1672, 262],
-      [1876, 315],                      // mid-swing prize on the second vine
-      [2056, 308],
-      [2234, 262], [2416, 216], [2598, 170],
-      [80, 352],
+      [248, 306], [510, 264], [772, 222], [1034, 264],
+      [1265, 320],                      // mid-swing prize on the first vine
+      [1475, 308],
+      [1930, 266], [2192, 224], [2454, 266],
+      [2685, 320],                      // mid-swing prize on the second vine
+      [2895, 308],
+      [3350, 266], [3612, 224], [3874, 182],
+      [90, 352],
     ],
     vines: [
-      [960, 60, 260],                   // cluster A (ends x=820) -> landing platform at x=1080: the swing reaches right over it
-      [1886, 60, 260],                  // cluster B (ends x=1746) -> landing platform at x=2006: the swing reaches right over it
+      [1280, 60, 260],                  // cluster A (ends x=1136) -> landing platform at x=1400: the swing reaches right over it
+      [2700, 60, 260],                  // cluster B (ends x=2556) -> landing platform at x=2820: the swing reaches right over it
     ],
-    goalX: 2766,
-    goalY: 202,                                 // finish counts only UP on the tree platform — never from underneath
+    goalX: 4118,
+    goalY: 214,                                 // finish counts only UP on the tree platform — never from underneath
   },
 ];
 
@@ -251,6 +251,17 @@ const player = {
 
 let bananasLeft = [];
 let vines = [];
+let particles = [];             // little sparkles for bananas, droplets for splashes
+
+function spawnParticles(x, y, color, n, spread, up) {
+  for (let i = 0; i < n; i++) {
+    particles.push({ x, y, vx: (Math.random() - 0.5) * spread, vy: -Math.random() * up - 1, t: 26 + Math.random() * 18, color, size: 3 + Math.random() * 4 });
+  }
+}
+function stepParticles() {
+  particles = particles.filter(p => --p.t > 0);
+  for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.16; }
+}
 
 function startLevel(idx, keepLives) {
   levelIndex = idx;
@@ -266,6 +277,11 @@ function startLevel(idx, keepLives) {
   banner = { text: level.name, sub: level.intro, t: 110 };
   state = 'playing';
   overlay.classList.add('hidden');
+  // IMPORTANT for the jump button: after START is clicked, the button keeps
+  // keyboard focus, and a focused button treats SPACE as a click — which
+  // would restart the game instead of jumping / letting go of a vine.
+  // Blurring it here means SPACE always reaches the game, never the button.
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 
 function newGame() {
@@ -283,7 +299,9 @@ function restartCurrentLevel() {
 }
 
 function loseLife() {
-  // Minx splashed into the water.
+  // Minx splashed into the creek.
+  spawnParticles(player.x + 17, WATER_Y + 4, '#81d4fa', 12, 4.5, 5);
+  spawnParticles(player.x + 17, WATER_Y + 4, '#e1f5fe', 6, 3, 3.5);
   lives--;
   sfx.fall();
   if (lives <= 0) {
@@ -300,6 +318,8 @@ function loseLife() {
 
 function collectBanana(b) {
   b.taken = true;
+  spawnParticles(b.x + 11, b.y + 11, '#ffd83d', 7, 3, 3);
+  spawnParticles(b.x + 11, b.y + 11, '#fff59d', 4, 2, 2);
   totalBananas++;
   const countInThree = ((totalBananas - 1) % 3) + 1;   // 1, 2, 3, 1, 2, 3… the counting lesson
   score += 10;
@@ -343,7 +363,7 @@ function showOverlay(title, html, btnLabel, onClick) {
 ovBtn.onclick = newGame;
 
 /* ---------- physics & update ---------- */
-const GRAV = 0.6, MOVE = 2.8, JUMP = -11;   // gentle jump (~100px — one platform step, never two) and a slower, calmer auto-run speed; platforms are wider and spread further apart to match
+const GRAV = 0.6, MOVE = 3.4, JUMP = -11;   // Minx's ORIGINAL speed (Finbar asked for it back) — the game is made easier by the platforms instead: they are now much wider and spread way out, with smaller height steps
 
 function solids() {
   const list = [];
@@ -354,9 +374,10 @@ function solids() {
 
 function update() {
   if (state !== 'playing') return;
-  if (startTimer > 0) { startTimer--; return; }   // "get ready" — Minx waits, then runs on his own
+  if (startTimer > 0) { startTimer--; stepParticles(); return; }   // "get ready" — Minx waits, then runs on his own
   if (banner && --banner.t <= 0) banner = null;
   popups = popups.filter(p => --p.t > 0);
+  stepParticles();
   if (player.grabCooldown > 0) player.grabCooldown--;
 
   // Vines swing OUT FAR all the time (wide arc, slow and gentle), so the rope
@@ -453,38 +474,38 @@ function update() {
 function px(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
 
 function drawBackground() {
-  px(0, 0, W, H, '#79c7e8');
-  px(0, 0, W, 90, '#8fd3f0');
-  // pixel clouds
-  ctx.fillStyle = '#ffffff';
-  for (let i = 0; i < 6; i++) {
-    const cx = ((i * 260 - cameraX * 0.3) % (W + 200) + W + 200) % (W + 200) - 100;
-    const cy = 28 + (i % 3) * 22;
-    ctx.fillRect(cx, cy, 64, 14); ctx.fillRect(cx + 14, cy - 10, 36, 10);
+  // CROWDED JUNGLE: the canopy fills the whole screen — there is no sky to see.
+  px(0, 0, W, H, '#123d17');
+  const greens = ['#1b5e20', '#2e7d32', '#256b29', '#388e3c', '#1e6b24'];
+  // five packed rows of overlapping leaf blobs, top to middle
+  for (let r = 0; r < 5; r++) {
+    for (let i = 0; i < 14; i++) {
+      const cx = ((i * 74 + r * 37 - cameraX * (0.22 + r * 0.07)) % (W + 140) + W + 140) % (W + 140) - 70;
+      ctx.fillStyle = greens[(i + r) % greens.length];
+      ctx.beginPath(); ctx.arc(cx, 6 + r * 52 + ((i * 13 + r * 7) % 18), 46 + ((i * 29 + r * 11) % 22), 0, 6.29); ctx.fill();
+    }
   }
-  // FULL jungle, layer 1: a wall of far canopy — overlapping tree tops with no gaps
-  for (let i = 0; i < 12; i++) {
-    const hx = ((i * 110 - cameraX * 0.35) % (W + 160) + W + 160) % (W + 160) - 80;
-    ctx.fillStyle = '#4e9a51';
-    ctx.beginPath(); ctx.arc(hx, 205 + (i % 3) * 16, 78, 0, 6.29); ctx.fill();
-    ctx.fillStyle = '#5da75d';
-    ctx.beginPath(); ctx.arc(hx - 18, 188 + (i % 3) * 16, 46, 0, 6.29); ctx.fill();
+  // dappled light spots filtering through the leaves (not sky — just glow)
+  ctx.fillStyle = 'rgba(220,255,180,0.13)';
+  for (let i = 0; i < 10; i++) {
+    const dx = ((i * 173 - cameraX * 0.3) % (W + 120) + W + 120) % (W + 120) - 60;
+    ctx.beginPath(); ctx.arc(dx, 40 + (i % 4) * 52, 13 + (i % 3) * 5, 0, 6.29); ctx.fill();
   }
-  // FULL jungle, layer 2: nearer trees packed right across the screen
-  for (let i = 0; i < 9; i++) {
-    const tx = ((i * 150 - cameraX * 0.6) % (W + 180) + W + 180) % (W + 180) - 90;
-    const th = 120 + (i % 3) * 26;
-    px(tx + 30, GROUND_Y - th + 52, 13, th - 52, '#5d4037');
-    px(tx, GROUND_Y - th, 74, 58, '#2e7d32');
-    px(tx + 12, GROUND_Y - th - 20, 50, 26, '#388e3c');
-    px(tx + 4, GROUND_Y - th + 38, 20, 16, '#43a047');
+  // a thicket of trunks below the canopy, packed across the screen
+  for (let i = 0; i < 10; i++) {
+    const tx = ((i * 105 - cameraX * 0.55) % (W + 140) + W + 140) % (W + 140) - 70;
+    px(tx + 26, 196, 13 + (i % 3) * 3, GROUND_Y - 186, '#4e342e');
+    ctx.fillStyle = greens[(i + 2) % greens.length];
+    ctx.beginPath(); ctx.arc(tx + 32, 208, 56, 0, 6.29); ctx.fill();
+    ctx.fillStyle = greens[i % greens.length];
+    ctx.beginPath(); ctx.arc(tx + 6, 232, 34, 0, 6.29); ctx.fill();
   }
-  // jungle floor bushes behind the play area, so the bottom is filled too
-  for (let wx = 30; wx < level.world; wx += 120) {
-    const sx = wx - cameraX; if (sx < -80 || sx > W + 40) continue;
-    px(sx, GROUND_Y - 22, 52, 24, '#1b5e20');
-    px(sx + 8, GROUND_Y - 32, 34, 14, '#2e7d32');
-    px(sx + 16, GROUND_Y - 12, 5, 12, '#43a047'); px(sx + 30, GROUND_Y - 14, 5, 14, '#43a047');
+  // dense bushes along the floor behind the play area
+  for (let wx = 10; wx < level.world; wx += 84) {
+    const sx = wx - cameraX; if (sx < -90 || sx > W + 40) continue;
+    px(sx, GROUND_Y - 26, 62, 28, '#1b5e20');
+    px(sx + 9, GROUND_Y - 38, 42, 16, '#2e7d32');
+    px(sx + 18, GROUND_Y - 13, 5, 13, '#43a047'); px(sx + 36, GROUND_Y - 15, 5, 15, '#43a047');
   }
 }
 
@@ -502,12 +523,25 @@ function drawWorld() {
     ctx.fillRect(sx, WATER_Y + 8, 17, 3);
     ctx.fillRect(sx + 20, WATER_Y + 21, 13, 3);
   }
-  // pebbles and stones along the creek (world-anchored, some half in the water)
+  // pebbles and stones along the creek (world-anchored, some half in the water) — with moss on top
   for (let wx = 24; wx < level.world; wx += 150) {
     const sx = wx - cameraX; if (sx < -40 || sx > W + 20) continue;
     px(sx, WATER_Y - 3, 28, 9, '#90a4ae');
     px(sx + 6, WATER_Y - 6, 15, 5, '#b0bec5');
+    px(sx + 3, WATER_Y - 8, 20, 4, '#43a047');            // moss cap
     px(sx + 44, WATER_Y + 17, 13, 6, '#78909c');
+    px(sx + 46, WATER_Y + 15, 9, 3, '#388e3c');           // moss on the small stone too
+  }
+  // fallen logs floating in the creek, with moss growing on them
+  for (let wx = 300; wx < level.world; wx += 340) {
+    const sx = wx - cameraX; if (sx < -110 || sx > W + 30) continue;
+    px(sx, WATER_Y + 11, 84, 15, '#6d4c2f');
+    px(sx, WATER_Y + 11, 84, 5, '#8d6e63');
+    px(sx + 78, WATER_Y + 11, 7, 15, '#a1887f');          // cut end of the log
+    px(sx + 80, WATER_Y + 14, 3, 9, '#795548');
+    px(sx + 10, WATER_Y + 7, 30, 6, '#43a047');           // moss blanket
+    px(sx + 48, WATER_Y + 8, 20, 5, '#2e7d32');           // more moss
+    px(sx + 22, WATER_Y + 26, 26, 4, '#388e3c');          // algae trailing in the water
   }
   // reeds at the water's edge of every ground bank
   for (const g of level.grounds) {
@@ -532,12 +566,15 @@ function drawWorld() {
     ctx.fillStyle = '#795548';
     for (let dx = 18; dx < g[1] - 10; dx += 46) ctx.fillRect(sx + dx, GROUND_Y + 34, 10, 7);
   }
-  // platforms (wooden logs)
+  // platforms (wooden logs, with moss growing on them)
   for (const p of level.platforms) {
     const sx = p[0] - cameraX; if (sx + p[2] < 0 || sx > W) continue;
     px(sx, p[1], p[2], 13, '#a1887f');
     px(sx, p[1], p[2], 5, '#c49a6c');
     px(sx + 4, p[1] + 3, 4, 7, '#6d4c2f'); px(sx + p[2] - 8, p[1] + 3, 4, 7, '#6d4c2f');
+    px(sx + 14, p[1] - 3, 34, 4, '#43a047');              // moss on top
+    px(sx + p[2] - 52, p[1] - 3, 26, 4, '#388e3c');
+    px(sx + 30, p[1] + 13, 18, 5, '#2e7d32');             // moss dripping underneath
   }
   // vines
   for (const v of vines) {
@@ -661,6 +698,12 @@ function draw() {
   drawBackground();
   drawWorld();
   drawMonkey();
+  // sparkles and splash droplets
+  for (const p of particles) {
+    ctx.globalAlpha = Math.min(1, p.t / 26);
+    px(p.x - cameraX, p.y, p.size, p.size, p.color);
+  }
+  ctx.globalAlpha = 1;
   drawHUD();
   // popups
   ctx.textAlign = 'center';
